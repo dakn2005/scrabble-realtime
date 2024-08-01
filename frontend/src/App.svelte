@@ -11,7 +11,7 @@ import Board from './components/Board.svelte';
 	</div>
 	<div class="drawer-side">
 	  <label for="my-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
-	  <!-- <Board /> -->
+	  <Board />
 	   Test
 	</div>
   </div>

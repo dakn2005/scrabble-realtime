@@ -27,6 +27,7 @@
     {id: 2, letter: 'B'},
     {id: 3, letter: 'C'},
   ]
+  
 
   function handleDnd(e) {
     items = e.detail.items;
