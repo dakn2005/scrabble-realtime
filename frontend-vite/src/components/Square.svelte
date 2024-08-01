@@ -19,7 +19,7 @@
 
   function finalizeDnd(e) {
     items = e.detail.items;
-    value = e.target.getAttribute('data-item').split(',');
+    let value = e.target.getAttribute('data-item').split(',');
     letterScore(value[0], value[1]);
   }
 

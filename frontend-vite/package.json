@@ -18,13 +18,9 @@
 		}
 	},
 	"files": [
-
 		"dist",
-
 		"!dist/**/*.test.*",
-
 		"!dist/**/*.spec.*"
-
 	],
 	"peerDependencies": {
 		"svelte": "^4.0.0"
@@ -37,6 +33,7 @@
 		"@sveltejs/vite-plugin-svelte": "^3.0.0",
 		"@types/eslint": "^9.6.0",
 		"autoprefixer": "^10.4.19",
+		"daisyui": "^4.12.10",
 		"eslint": "^9.0.0",
 		"eslint-plugin-svelte": "^2.36.0",
 		"globals": "^15.0.0",
@@ -52,6 +49,10 @@
 	"types": "./dist/index.d.ts",
 	"type": "module",
 	"dependencies": {
-		"svelte-dnd-action": "^0.9.49"
+		"clsx": "^2.1.1",
+		"svelte-dnd-action": "^0.9.49",
+		"tailwind-merge": "^2.4.0",
+		"tailwind-variants": "^0.2.1",
+		"vaul-svelte": "^0.3.2"
 	}
 }

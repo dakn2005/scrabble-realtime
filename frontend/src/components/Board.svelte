@@ -22,7 +22,7 @@
     10: ["Q", "Z"],
   };
 
-  tile_items = [
+items = [
     {id: 1, letter: 'A'},
     {id: 2, letter: 'B'},
     {id: 3, letter: 'C'},
@@ -57,7 +57,7 @@
 
   <!-- user deck -->
   <div class="rack" use:dndzone="{options}" on:finalize="{handleDnd}" on:consider="{handleDnd}">
-    {#each tile_items as item (item.id)}
+    {#each items as item (item.id)}
       <div animate:flip="{{ duration: flipDurationMs }}">
         <Tile letter="{item.letter}" />
       </div>

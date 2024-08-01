@@ -119,13 +119,13 @@
     style="{items.find((tile) => tile[SHADOW_ITEM_MARKER_PROPERTY_NAME]) ? 'background: rgba(255, 255, 255, 0.2)' : ''}" 
 	>
 
-  {#if items.length == 0 && isSpecial}
+  <!-- {#if items.length == 0 && isSpecial}
     <SpecialTile {tile_type} />
-  {:else}
+  {:else} -->
     {#each items as tile (tile.id)}
       <Tile letter={tile.letter} />
     {/each}
-  {/if}
+  <!-- {/if} -->
 </div>
 
 <style>
