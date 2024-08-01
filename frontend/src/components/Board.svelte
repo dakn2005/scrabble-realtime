@@ -7,15 +7,22 @@
 
   let idx = 0;
 
-  let items = [
-    { id: idx++, letter: "A" },
-    { id: idx++, letter: "B" },
-    { id: idx++, letter: "C" },
-    { id: idx++, letter: "D" },
-    { id: idx++, letter: "E" },
-    { id: idx++, letter: "F" },
-    { id: idx++, letter: "G" },
-  ];
+  let items = [], tile_items = [];
+
+  let lettersBag = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", 
+      "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
+
+  let lettersScores = {
+    1: ["A", "E", "I", "O", "U", "L", "N", "S", "T", "R"],
+    2: ["D", "G"],
+    3: ["B", "C", "M", "P"],
+    4: ["F", "H", "V", "W", "Y"],
+    5: ["K"],
+    8: ["J", "X"],
+    10: ["Q", "Z"],
+  };
+
+  
 
   function handleDnd(e) {
     items = e.detail.items;
@@ -30,16 +37,15 @@
     flipDurationMs,
     morphDisabled: true,
   };
-
 </script>
 
 <div class="game-container">
   <!-- board -->
   <div class="grid">
-    {#each boardGrid as row,i}
+    {#each boardGrid as row, i}
       <div class="board-row">
         {#each row as square}
-          <Square row_id={i} tile_id={square.id} />
+          <Square row_id="{i}" tile_id="{square.id}" />
         {/each}
       </div>
     {/each}
@@ -47,13 +53,12 @@
 
   <!-- user deck -->
   <div class="rack" use:dndzone="{options}" on:finalize="{handleDnd}" on:consider="{handleDnd}">
-    {#each items as item(item.id) }
+    {#each tile_items as item (item.id)}
       <div animate:flip="{{ duration: flipDurationMs }}">
         <Tile letter="{item.letter}" />
       </div>
     {/each}
   </div>
-
 </div>
 
 <style>

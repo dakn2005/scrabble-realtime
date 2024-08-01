@@ -5,6 +5,8 @@ import terser from '@rollup/plugin-terser';
 import resolve from '@rollup/plugin-node-resolve';
 import livereload from 'rollup-plugin-livereload';
 import css from 'rollup-plugin-css-only';
+// import tailwind from 'rollup-plugin-tailwindcss';
+import postcss from "rollup-plugin-postcss";
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -31,12 +33,14 @@ function serve() {
 
 export default {
 	input: 'src/main.js',
+
 	output: {
 		sourcemap: true,
 		format: 'iife',
 		name: 'app',
 		file: 'public/build/bundle.js'
 	},
+
 	plugins: [
 		svelte({
 			compilerOptions: {
@@ -44,9 +48,15 @@ export default {
 				dev: !production
 			}
 		}),
+		
 		// we'll extract any component CSS out into
 		// a separate file - better for performance
-		css({ output: 'bundle.css' }),
+		// css({ output: 'bundle.css' }),
+
+		postcss({
+			extract: true,
+			minimize: true,
+		}),
 
 		// If you have external dependencies installed from
 		// npm, you'll most likely need these plugins. In
@@ -72,6 +82,7 @@ export default {
 		// instead of npm run dev), minify
 		production && terser()
 	],
+
 	watch: {
 		clearScreen: false
 	}

@@ -10,13 +10,17 @@
 
   let items = [];
 
+  let userLetterScore = 0, userTotalScore = 0;
+
+
   function considerDnd(e) {
     items = e.detail.items;
   }
 
   function finalizeDnd(e) {
     items = e.detail.items;
-    // console.log(items);
+    value = e.target.getAttribute('data-item').split(',');
+    letterScore(value[0], value[1]);
   }
 
   // based on the board from: https://www.solitaireparadise.com/games_list/scrabble-online.html
@@ -73,14 +77,27 @@
     
   }
 
+  function letterScore(rowId, tileId){
+    let mapper = special_tiles[row_id] || special_tiles[14 - row_id];
+    
+    if (mapper && mapper[tile_id]){
+        switch(mapper[tile_id]){
+          case 'tw' || 'tl':
+            return 3
+          case 'dw' || 'dl' || 'm':
+            return 2
+        }
+    }
+
+    return 1
+  }
+
   $: if (row_id || tile_id){  
     let mapper = special_tiles[row_id] || special_tiles[14 - row_id];
     
-    if (mapper){
-      if (mapper[tile_id]){
+    if (mapper && mapper[tile_id]){
         isSpecial = true
         tile_type = mapper[tile_id]
-      }
     }
   }
 
@@ -94,7 +111,7 @@
 </script>
 
 <div 
-    data-item="{tile_id}" 
+    data-item="{row_id}, {tile_id}" 
     class="square-design square-size" 
     use:dndzone="{options}" 
     on:consider="{considerDnd}" 
