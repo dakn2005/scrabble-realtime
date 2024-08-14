@@ -1,11 +1,17 @@
 <script>
+  import io from "socket.io-client";
+
   import * as Drawer from "$lib/components/ui/drawer";
   import * as Sheet from "$lib/components/ui/sheet";
 
   import "../app.css";
   import { settingsOpen, chatsOpen } from "$lib/stores.js";
 
-  import Board from "$components/Board.svelte";
+  import Board from "$components/board/Board.svelte";
+  import Chat from "$components/chat/Index.svelte";
+
+  const url = "http://localhost:4000";
+  const socket = io.connect(url);
 </script>
 
 <!-- <div class="drawer drawer-end">
@@ -20,13 +26,11 @@
   </div>
 </div> -->
 
-
-
 <!-- <button on:click={() => sideOpen = true}>Open</button> -->
 <Board />
 <!-- <label for="my-drawer" class="btn btn-primary">Side Menu</label> -->
 
-<Drawer.Root bind:open={$settingsOpen}>
+<Drawer.Root bind:open="{$settingsOpen}">
   <!-- <Drawer.Trigger></Drawer.Trigger> -->
   <Drawer.Content>
     <Drawer.Header>
@@ -43,16 +47,15 @@
   </Drawer.Content>
 </Drawer.Root>
 
-<Sheet.Root bind:open={$chatsOpen}>
+<Sheet.Root bind:open="{$chatsOpen}">
   <!-- <Sheet.Trigger>Open</Sheet.Trigger> -->
   <Sheet.Content>
     <Sheet.Header>
-      <Sheet.Title>Are you sure absolutely sure?</Sheet.Title>
-      <Sheet.Description>
-        This action cannot be undone. This will permanently delete your account
-        and remove your data from our servers.
-      </Sheet.Description>
+      <Sheet.Title>Chat Room</Sheet.Title>
+      <!-- <Sheet.Description>This action cannot be undone. This will permanently delete your account and remove your data from our servers.</Sheet.Description> -->
     </Sheet.Header>
+
+    <Chat {socket} />
+    
   </Sheet.Content>
 </Sheet.Root>
-

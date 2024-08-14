@@ -7,6 +7,7 @@ import { Server, Socket } from 'socket.io';
 import express, { Request, Response } from 'express';
 import http from 'http';
 import cors from 'cors';
+import 'dotenv/config'; 
 
 import { IUser } from './interfaces'
 import { saveMessage, readMessages, readRooms } from './database/services/crud';
@@ -16,6 +17,9 @@ let app = express();
 app.use(cors());
 
 const server = http.createServer(app);
+
+let ioCorsUrl = process.env.DEBUG ? 'http://localhost:5173' : 'https://lesdaw-ip-105-163-0-0.tunnelmole.net';
+
 
 // app.get('/rooms', (req: Request, res: Response) => {
 //     res.send({ msg: 'Hello World!' });
@@ -33,12 +37,12 @@ app.get('/api/rooms', async (req: Request, res: Response) => {
 
 const io = new Server(server, {
     cors: {
-        origin: 'https://lesdaw-ip-105-163-0-0.tunnelmole.net', //localhost:3000
+        origin: ioCorsUrl,
         methods: ['GET', 'POST'],
     },
 });
 
-const CHAT_BOT = 'ChatBot';
+const CHAT_BOT = 'KBot';
 // Add this
 let chatRoom = ''; // E.g. javascript, node,...
 let allUsers: IUser[] = []; // All users in current chat room
