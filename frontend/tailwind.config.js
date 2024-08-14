@@ -5,9 +5,9 @@ import daisyui from 'daisyui';
 const config = {
   darkMode: ["class"],
   content: ["./src/**/*.{html,js,svelte,ts}"],
-  safelist: ["dark"],
+  safelist: ["light"],
   plugins: [
-    daisyui,
+    daisyui
   ],
   theme: {
     container: {

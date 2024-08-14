@@ -1,6 +1,6 @@
 {
-  "id": "c6048d3f-97ce-48e0-9bdd-1c4702f65428",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "35d4b655-c3a1-4670-bfab-58fe82d43c18",
+  "prevId": "c6048d3f-97ce-48e0-9bdd-1c4702f65428",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -23,6 +23,12 @@
         "created_by": {
           "name": "created_by",
           "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createddate": {
+          "name": "createddate",
+          "type": "date",
           "primaryKey": false,
           "notNull": true
         }

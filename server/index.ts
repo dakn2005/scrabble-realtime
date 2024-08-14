@@ -10,8 +10,8 @@ import cors from 'cors';
 import 'dotenv/config'; 
 
 import { IUser } from './interfaces'
-import { saveMessage, readMessages, readRooms } from './database/services/crud';
-import leaveRoom from './utils/leave-room';
+import { saveMessage, readMessages, getGames, createGame } from './database/services/crud';
+import leaveGame from './utils/leave-room';
 
 let app = express();
 app.use(cors());
@@ -29,11 +29,24 @@ app.get('/', (req: Request, res: Response) => {
     res.send('Hello World!');
 });
 
-app.get('/api/rooms', async (req: Request, res: Response) => {
-    const rooms = await readRooms();
-    // console.log(rooms)
-    res.send(rooms)
+app.get('/api/games', async (req: Request, res: Response) => {
+    const games = await getGames();
+    // console.log(games)
+    res.send(games)
 });
+
+app.get('/api/games/add', async (req: Request, res: Response) => {
+    
+    console.log(req.body)
+
+    // createGame(req.body)
+
+    // TODO: implement LRU here
+
+    const games = await getGames();
+    res.send(games)
+});
+
 
 const io = new Server(server, {
     cors: {
@@ -50,7 +63,7 @@ let allUsers: IUser[] = []; // All users in current chat room
 io.on('connection', (socket: Socket) => {
     // console.log(`User connected ${socket.id}`);
 
-    socket.on('join_room', (data) => {
+    socket.on('join_game', (data) => {
         const { username, room } = data; // Data sent from client when join_room event emitted
         socket.join(room); // Join the user to a socket room
 
@@ -71,8 +84,8 @@ io.on('connection', (socket: Socket) => {
 
         // Save the new user to the room
         chatRoom = room;
-        allUsers.push({ id: socket.id, username, room });
-        let chatRoomUsers = allUsers.filter((user) => user?.room === room);
+        allUsers.push({ id: socket.id, username, game: room });
+        let chatRoomUsers = allUsers.filter((user) => user?.game === room);
 
         socket.to(room).emit('chatroom_users', chatRoomUsers);
         socket.emit('chatroom_users', chatRoomUsers);
@@ -86,10 +99,10 @@ io.on('connection', (socket: Socket) => {
     });
 
     socket.on('send_message', (data) => {
-        const { message, username, room, __createdtime__: createddate } = data;
-        const rec = { message, username, room, createddate: new Date(createddate) }
+        const { message, username, game, __createdtime__: createddate } = data;
+        const rec = { message, username, game, createddate: new Date(createddate) }
 
-        io.in(room).emit('receive_message', data); // Send to all users in room, including sender
+        io.in(game).emit('receive_message', data); // Send to all users in room, including sender
 
         // harperSaveMessage(message, username, room, __createdtime__) // Save message in db
         //     .then((response) => console.log(response))
@@ -103,7 +116,7 @@ io.on('connection', (socket: Socket) => {
         socket.leave(room);
         const __createdtime__ = Date.now();
         // Remove user from memory
-        allUsers = leaveRoom(socket.id, allUsers);
+        allUsers = leaveGame(socket.id, allUsers);
         // console.log(allUsers)
         socket.to(room).emit('chatroom_users', allUsers);
         socket.to(room).emit('receive_message', {
@@ -118,7 +131,7 @@ io.on('connection', (socket: Socket) => {
         // console.log('User disconnected from the chat');
         const user = allUsers.find((user) => user.id == socket.id);
         if (user?.username) {
-            allUsers = leaveRoom(socket.id, allUsers);
+            allUsers = leaveGame(socket.id, allUsers);
             socket.to(chatRoom).emit('chatroom_users', allUsers);
             socket.to(chatRoom).emit('receive_message', {
                 message: `${user.username} has disconnected from the chat.`,

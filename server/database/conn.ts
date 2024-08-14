@@ -1,18 +1,23 @@
-import { drizzle } from 'drizzle-orm/mysql2';
-import mysql from 'mysql2';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { Client } from "pg";
+// import mysql from 'mysql2';
 // import * as schema from './schema';
 
-let connection = mysql.createConnection({
+const client = new Client({
     host: 'localhost',
-    user: 'root',
-    password: 'daudi2016',
-    database: 'react_chat',
-    // port: 3306,
-    multipleStatements: true,
-})
+    port: 5435,
+    user: 'postgres',
+    // password: 'daudi2016',
+    database: 'scrabble_game',
+    // multipleStatements: true,
+});
 
 // let mode: Mode = 'development'
 
-export { connection };
+// export { client as connection };
 // export const db = drizzle(connection, { schema, mode });
-export const db = drizzle(connection);
+(async() => {
+    await client.connect();
+})()
+
+export const db = drizzle(client);

@@ -1,7 +1,7 @@
 import {db} from '../conn';
 import { eq, lt, gte, ne } from 'drizzle-orm';
-import { rooms, messages } from '../schema';
-import {IMessage} from '../../interfaces';
+import { games, messages } from '../schema';
+import {IMessage, IGame} from '../../interfaces';
 
 export const saveMessage = async (data: IMessage) =>{
     // console.log(data)
@@ -9,17 +9,26 @@ export const saveMessage = async (data: IMessage) =>{
     await db.insert(messages).values({
         username: data.username,
         message: data.message,
-        room: data.room,
+        game: data.game,
         createddate: data.createddate
     });
 }
 
 export const readMessages = async(roomId: number) =>{
-    let res = await db.select().from(messages).where(eq(messages.room, roomId));
+    let res = await db.select().from(messages).where(eq(messages.game, roomId));
     return res
 }
 
-export const readRooms = async(roomId? : number) => {
-    let res = await db.select().from(rooms)
+export const getGames = async(roomId? : number) => {
+    let res = await db.select().from(games)
     return res
+}
+
+export const createGame = async(data: IGame) => {
+    await db.insert(games).values({
+        name: data.name,
+        created_by: data.created_by,
+        createddate: new Date()
+
+    });
 }

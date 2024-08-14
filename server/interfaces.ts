@@ -1,14 +1,20 @@
 interface IUser {
     id: string;
     username: string;
-    room: string;
+    game: string;
 }
 
 interface IMessage {
-    message: string,
-    username: string,
-    room: number,
+    message: string
+    username: string
+    game: number
     createddate: Date
 }
 
-export { IUser, IMessage }
+interface IGame {
+    name: string
+    created_by: string,
+    createddate: Date
+}
+
+export { IUser, IMessage, IGame }
