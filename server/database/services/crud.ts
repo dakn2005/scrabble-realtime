@@ -29,6 +29,5 @@ export const createGame = async(data: IGame) => {
         name: data.name,
         created_by: data.created_by,
         createddate: new Date()
-
     });
 }
