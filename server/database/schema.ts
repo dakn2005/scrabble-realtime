@@ -1,6 +1,5 @@
-import { create } from 'domain';
+import { SQL, sql } from 'drizzle-orm';
 import { 
-     
     integer,
     pgEnum, 
     pgTable, 
@@ -18,10 +17,16 @@ export const messages = pgTable('messages', {
     createddate: date('createddate', { mode: 'date' }).notNull(),
 });
 
-export const games = pgTable('games', {
+export const games = pgTable(
+    'games', 
+    {
     id: serial('id').notNull().primaryKey(),
     name: varchar('name', { length: 255 }).notNull(),
     created_by: varchar('created_by', { length: 255 }).notNull(),
     createddate: date('createddate', { mode: 'date' }).notNull(),
-});
+    },
+    (tab) => ({
+        gameNameUniqueIndex: uniqueIndex('gameNameUniqueIndex').on(sql`lower(${tab.name})`),
+    })
+);
 

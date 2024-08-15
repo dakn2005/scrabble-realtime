@@ -5,13 +5,16 @@
   import * as Sheet from "$lib/components/ui/sheet";
 
   import "../../app.css";
-  import { settingsOpen, chatsOpen } from "$lib/stores.js";
+  import { settingsOpen, chatsOpen, userStore } from "$lib/stores.js";
+  import { SOCKET_URL } from '$lib/constants.js';
 
   import Board from "$components/board/Board.svelte";
   import Chat from "$components/chat/Index.svelte";
 
-  const url = "http://localhost:4000";
-  const socket = io.connect(url);
+  const socket = io.connect(SOCKET_URL);
+  const { username, game } = $userStore;
+
+  socket.emit("join_game", { username, room: game?.id });
 </script>
 
 <!-- <div class="drawer drawer-end">

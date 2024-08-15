@@ -1,5 +1,7 @@
-import {db} from '../conn';
 import { eq, lt, gte, ne } from 'drizzle-orm';
+import { DrizzleError } from 'drizzle-orm';
+
+import {db} from '../conn';
 import { games, messages } from '../schema';
 import {IMessage, IGame} from '../../interfaces';
 
@@ -25,9 +27,15 @@ export const getGames = async(roomId? : number) => {
 }
 
 export const createGame = async(data: IGame) => {
-    await db.insert(games).values({
-        name: data.name,
-        created_by: data.created_by,
-        createddate: new Date()
-    });
+    try{
+         await db.insert(games).values({
+            name: data.name,
+            created_by: data.created_by,
+            createddate: new Date()
+        });
+
+        return [true, null ]
+    }catch(e: DrizzleError | any){
+        return [false, e]
+    }
 }

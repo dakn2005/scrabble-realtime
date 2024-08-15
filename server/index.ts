@@ -7,14 +7,18 @@ import { Server, Socket } from 'socket.io';
 import express, { Request, Response } from 'express';
 import http from 'http';
 import cors from 'cors';
-import 'dotenv/config'; 
+import 'dotenv/config';
 
 import { IUser } from './interfaces'
 import { saveMessage, readMessages, getGames, createGame } from './database/services/crud';
-import leaveGame from './utils/leave-room';
+import leaveGame from './utils/leave-game';
+import errorHandling from './utils/errorHandling';
 
 let app = express();
+
 app.use(cors());
+app.use(express.json())
+// app.use(express.urlencoded({extended: true}))
 
 const server = http.createServer(app);
 
@@ -35,16 +39,26 @@ app.get('/api/games', async (req: Request, res: Response) => {
     res.send(games)
 });
 
-app.get('/api/games/add', async (req: Request, res: Response) => {
-    
-    console.log(req.body)
+app.post('/api/games/add', async (req: Request, res: Response) => {
 
-    // createGame(req.body)
+    let [status, err] = await createGame(req.body)
 
     // TODO: implement LRU here
 
-    const games = await getGames();
-    res.send(games)
+    if (status) {
+        const games = await getGames();
+        res.send({
+            games,
+            status: 'success'
+        })
+    } else {
+        res.send({
+            status: 'fail',
+            error: errorHandling(err.code, 'game')
+        })
+    }
+
+    console.log(err)
 });
 
 

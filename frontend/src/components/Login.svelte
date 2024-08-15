@@ -2,34 +2,55 @@
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
 
-  export let url;
+  import { SOCKET_URL } from "$lib/constants.js";
+  import { userStore } from "$lib/stores.js";
+  import { Toaster } from "$lib/components/ui/sonner";
+  import { toast } from "svelte-sonner";
 
   let username,
     game,
+    newuname,
     newgame,
     games = [];
 
   onMount(async () => {
-    const resp = await fetch(url + "/api/games");
+    const resp = await fetch(SOCKET_URL + "/api/games");
     games = await resp.json();
   });
 
   const joinGame = () => {
-    if (game !== "" && username !== "") {
-      socket.emit("join_game", { username, room: game?.id });
+    // console.log(username, game)
+    // return
+
+    if (game == "" || username == "") {
+      alert("Please select a game and enter a username");
+    } else {
+      $userStore = { username, game };
       goto("/game");
     }
   };
 
   const newGame = async () => {
-    const resp = await fetch(url + "/api/games/add", {
+    username = newuname;
+
+    const resp = await fetch(SOCKET_URL + "/api/games/add", {
       method: "POST",
+      headers: { "content-type": "application/json" },
       body: JSON.stringify({ name: newgame, created_by: username }),
     });
-    games = await resp.json();
-  }
+
+    let res = await resp.json();
+
+    if (res.status == "fail") {
+      toast.error(res.error);
+    } else {
+      game = res.games.find((g) => g.name == newgame);
+      joinGame();
+    }
+  };
 </script>
 
+<Toaster />
 
 <div class="w-full">
   <div class="card bg-slate-700 w-96 shadow-xl p-10 space-y-5 m-auto mt-48">
@@ -37,10 +58,10 @@
 
     <label class="input input-bordered input-md flex items-center gap-2">
       username
-      <input type="text" class="grow" placeholder="Kimana" bind:value="{username}" />
+      <input type="text" class="grow" placeholder="e.g. Kimana" bind:value="{username}" />
     </label>
 
-    <select class="select select-bordered select-md w-full max-w-xs">
+    <select class="select select-bordered select-md w-full max-w-xs" bind:value="{game}">
       <option>-- Select Game --</option>
       {#each games as game (game.id)}
         <option value="{game.id}">{game.name}</option>
@@ -49,26 +70,32 @@
 
     <button class="btn btn-neutral w-full" style="width: 100%;" on:click="{joinGame}"> Join Game </button>
 
-    <button class="btn btn-outline btn-warning w-full" style="width: 100%;" onclick="my_modal_2.showModal()">
+    <button class="btn btn-outline btn-warning w-full" style="width: 100%;" onclick="new_game_modal.showModal()">
       <i class="fa-solid fa-plus"></i> New Game
     </button>
 
-    <dialog id="my_modal_2" class="modal">
+    <dialog id="new_game_modal" class="modal">
       <div class="modal-box">
-
         <h3 class="text-lg font-bold mb-4">+ Add</h3>
 
+        <label class="input input-bordered input-md flex items-center gap-2 mb-3">
+          username
+          <input type="text" class="grow" placeholder="e.g. Kimana" bind:value="{newuname}" />
+        </label>
+
         <label class="input input-bordered input-md flex items-center gap-2 mb-4">
-          <span class="text-xs">Name of the Game </span>
+          <span class="text-xs">Game Name </span>
           <input type="text" class="grow text-lg" placeholder="..." bind:value="{newgame}" />
         </label>
 
-        <button class="btn btn-primary w-full" style="width: 100%;" on:click="{newGame}"> Save </button>
+        <form method="dialog">
+          <button class="btn btn-primary w-full" style="width: 100%;" on:click="{newGame}"> Save </button>
+        </form>
+
       </div>
       <form method="dialog" class="modal-backdrop">
         <button>close</button>
       </form>
     </dialog>
-
   </div>
 </div>
