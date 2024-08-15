@@ -1,4 +1,5 @@
 <script>
+  import { goto } from "$app/navigation";
   import { settingsOpen, chatsOpen } from "$lib/stores.js";
 
   export let isbottom = false, setToggleSideBar;
@@ -42,6 +43,13 @@
       <span>scores </span>
     </button>
   </li>
+  <li>
+    <button on:click="{() => goto('/')}">
+      <i class="fa-solid fa-circle-xmark md:text-lg text-red-600"></i>
+      <span>exit</span>
+    </button>
+  </li>
+
   {#if !isbottom}
     <li>
       <button on:click="{setToggleSideBar()}">
@@ -57,7 +65,7 @@
 <style lang="scss">
   /* side menu */
   ul.sidemenu {
-    @apply bg-base-200 rounded-box h-fit ml-5 mr-5 mt-auto mb-auto;
+    @apply bg-base-200 rounded-box h-fit ml-5 mr-5;
   }
 
   ul.sidemenu > li > button {
@@ -69,12 +77,12 @@
   }
   /* bottom menu */
   ul.bottommenu {
-    @apply menu-horizontal bg-base-200 rounded-box m-auto mt-20 p-0;
+    @apply menu-horizontal bg-base-200 rounded-box m-auto mt-14 p-0;
   }
 
   ul.bottommenu > li > button {
     @apply flex flex-row-reverse p-2;
-    font-size: 9.5px;    
+    font-size: 9.5px;
   }
 
   ul.bottommenu > li > button > img {

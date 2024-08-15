@@ -1,39 +1,38 @@
 <script>
-  import { onMount, onDestroy } from "svelte";
+  import { persisted } from "svelte-persisted-store";
 
-  export let username, room, socket;
+  import { socket, userStore } from "$lib/stores.js";
 
-  let messages;
+  let { username } = $userStore;
+  let messages = persisted("messages", []);
 
-  onDestroy(() => {
-    // socket.disconnect();
-    socket.off("receive_message");
+  // onDestroy(() => {
+  //   $socket.off("receive_message");
+  //   // socket.disconnect();
+  // });
+
+  $socket.on("receive_message", (data) => {
+
+    $messages = [
+      ...$messages,
+      {
+        message: data.message,
+        username: data.username,
+        __createdtime__: data.__createdtime__,
+      },
+    ];
+
   });
 
-  $: if (socket) {
-    socket.on("receive_message", (data) => {
-      // console.log('socket receive_message: ', data);
+  // $socket.on("all_msgs", (allMsgs) => {
+  //   // console.log('All messages:', JSON.parse(allMsgs));
+  //   // allMsgs = JSON.parse(allMsgs);
+  //   // Sort these messages by __createdtime__
 
-      messages = [
-        ...messages,
-        {
-          message: data.message,
-          username: data.username,
-          __createdtime__: data.__createdtime__,
-        },
-      ];
-    });
+  //   messages = [...messages, allMsgs];
 
-    socket.on("all_msgs", (allMsgs) => {
-      // console.log('All messages:', JSON.parse(allMsgs));
-      // allMsgs = JSON.parse(allMsgs);
-      // Sort these messages by __createdtime__
-
-      messages = [...messages, allMsgs];
-
-      messages.sort((a, b) => parseInt(a.__createdtime__) - parseInt(b.__createdtime__));
-    });
-  }
+  //   messages.sort((a, b) => parseInt(a.__createdtime__) - parseInt(b.__createdtime__));
+  // });
 
   function formatDateFromTimestamp(timestamp) {
     const date = new Date(timestamp);
@@ -41,19 +40,31 @@
   }
 </script>
 
-{#each messages as msg}
-  <div class="chat chat-start">
-    <div class="chat-bubble">
-      <p>
-        <span class="justify-start">
-          {msg.username}
-        </span>
-        <span class="justify-end">
-            {formatDateFromTimestamp(msg.__createdtime__)}
-        </span>
-      </p>
-
-      {msg.message}
+{#if !messages || messages.length === 0}
+  <div class="hero bg-base-200" style="height: 80vh;">
+    <div class="hero-content text-center">
+      <div class="max-w-md">
+        <!-- <h1 class="text-5xl font-bold">Chats</h1> -->
+        <p class="py-6">Write your first message</p>
+        <!-- <button class="btn btn-primary">Get Started</button> -->
+      </div>
     </div>
   </div>
-{/each}
+{:else}
+  {#each messages as msg}
+    <div class="chat {username == msg.username ? 'chat-end' : 'chat-start'}">
+      <div class="chat-bubble">
+        <p>
+          <span class="justify-start">
+            {msg.username}
+          </span>
+          <span class="justify-end">
+            {formatDateFromTimestamp(msg.__createdtime__)}
+          </span>
+        </p>
+
+        {msg.message}
+      </div>
+    </div>
+  {/each}
+{/if}

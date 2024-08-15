@@ -6,7 +6,6 @@ import { games, messages } from '../schema';
 import {IMessage, IGame} from '../../interfaces';
 
 export const saveMessage = async (data: IMessage) =>{
-    // console.log(data)
 
     await db.insert(messages).values({
         username: data.username,

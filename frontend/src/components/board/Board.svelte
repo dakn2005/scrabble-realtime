@@ -48,7 +48,6 @@
 
 <div class="game-container">
  
-
   <div class="flex {!toggleSideBar ? 'flex-row' : 'flex-row-reverse'}">
 
     <SideBottomMenu {setToggleSideBar} />
@@ -93,8 +92,8 @@
   }
   .game-container {
     display: flex;
-    height: 100vh;
     flex-direction: column;
+    height: 100vh;
     background-color: #272727;
     /* background-color: #fffae8; */
     justify-content: center;

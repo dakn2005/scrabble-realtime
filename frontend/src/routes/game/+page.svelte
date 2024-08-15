@@ -1,20 +1,28 @@
 <script>
+  import { onMount, onDestroy } from "svelte";
   import io from "socket.io-client";
 
   import * as Drawer from "$lib/components/ui/drawer";
   import * as Sheet from "$lib/components/ui/sheet";
 
   import "../../app.css";
-  import { settingsOpen, chatsOpen, userStore } from "$lib/stores.js";
+  import { socket, settingsOpen, chatsOpen, userStore } from "$lib/stores.js";
   import { SOCKET_URL } from '$lib/constants.js';
 
   import Board from "$components/board/Board.svelte";
   import Chat from "$components/chat/Index.svelte";
 
-  const socket = io.connect(SOCKET_URL);
+  $socket = io.connect(SOCKET_URL);
+
   const { username, game } = $userStore;
 
-  socket.emit("join_game", { username, room: game?.id });
+  onMount(() => {
+    $socket.emit("join_game", { username, game });
+  })
+
+  onDestroy(() => {
+    $socket.emit("leave_game", {username, game})
+  })
 </script>
 
 <!-- <div class="drawer drawer-end">
@@ -58,7 +66,7 @@
       <!-- <Sheet.Description>This action cannot be undone. This will permanently delete your account and remove your data from our servers.</Sheet.Description> -->
     </Sheet.Header>
 
-    <Chat {socket} />
+    <Chat />
     
   </Sheet.Content>
 </Sheet.Root>

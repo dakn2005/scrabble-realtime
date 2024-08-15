@@ -24,6 +24,7 @@ const server = http.createServer(app);
 
 let ioCorsUrl = process.env.DEBUG ? 'http://localhost:5173' : 'https://lesdaw-ip-105-163-0-0.tunnelmole.net';
 
+// console.log(process.env.DEBUG, ioCorsUrl)
 
 // app.get('/rooms', (req: Request, res: Response) => {
 //     res.send({ msg: 'Hello World!' });
@@ -78,13 +79,15 @@ io.on('connection', (socket: Socket) => {
     // console.log(`User connected ${socket.id}`);
 
     socket.on('join_game', (data) => {
-        const { username, room } = data; // Data sent from client when join_room event emitted
-        socket.join(room); // Join the user to a socket room
+        const { username, game } = data; // Data sent from client when join_room event emitted
+        socket.join(game); // Join the user to a socket room
+
+        // console.log('joining: ', username, game)
 
         let __createdtime__ = Date.now(); // Current timestamp
 
         // Send message to all users currently in the room, apart from the user that just joined
-        socket.to(room).emit('receive_message', {
+        socket.to(game).emit('receive_message', {
             message: `${username} has joined the chat room`,
             username: CHAT_BOT,
             __createdtime__,
@@ -97,18 +100,18 @@ io.on('connection', (socket: Socket) => {
         });
 
         // Save the new user to the room
-        chatRoom = room;
-        allUsers.push({ id: socket.id, username, game: room });
-        let chatRoomUsers = allUsers.filter((user) => user?.game === room);
+        chatRoom = game;
+        allUsers.push({ id: socket.id, username, game: game });
+        let chatRoomUsers = allUsers.filter((user) => user?.game === game);
 
-        socket.to(room).emit('chatroom_users', chatRoomUsers);
+        socket.to(game).emit('chatroom_users', chatRoomUsers);
         socket.emit('chatroom_users', chatRoomUsers);
 
-        (async () => {
-            let all_msgs = await readMessages(room);
-            all_msgs = all_msgs.map((msg) => ({ ...msg, __createdtime__: msg.createddate }))
-            socket.emit('all_msgs', all_msgs);
-        })()
+        // (async () => {
+        //     let all_msgs = await readMessages(game);
+        //     all_msgs = all_msgs.map((msg) => ({ ...msg, __createdtime__: msg.createddate }))
+        //     socket.emit('all_msgs', all_msgs);
+        // })()
 
     });
 
@@ -122,18 +125,22 @@ io.on('connection', (socket: Socket) => {
         //     .then((response) => console.log(response))
         //     .catch((err) => console.log(err));
 
-        saveMessage(rec)
+        // console.log(rec)
+
+        // saveMessage(rec)
     });
 
-    socket.on('leave_room', (data) => {
-        const { username, room } = data;
-        socket.leave(room);
+    socket.on('leave_game', (data) => {
+        const { username, game } = data;
+        // console.log(username, game)
+
+        socket.leave(game);
         const __createdtime__ = Date.now();
         // Remove user from memory
         allUsers = leaveGame(socket.id, allUsers);
         // console.log(allUsers)
-        socket.to(room).emit('chatroom_users', allUsers);
-        socket.to(room).emit('receive_message', {
+        socket.to(game).emit('chatroom_users', allUsers);
+        socket.to(game).emit('receive_message', {
             username: CHAT_BOT,
             message: `${username} has left the chat`,
             __createdtime__,

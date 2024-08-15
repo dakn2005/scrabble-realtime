@@ -44,7 +44,8 @@
     if (res.status == "fail") {
       toast.error(res.error);
     } else {
-      game = res.games.find((g) => g.name == newgame);
+      let gameObj = res.games.find((g) => g.name == newgame);
+      game = gameObj.id
       joinGame();
     }
   };
