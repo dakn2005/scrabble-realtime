@@ -5,4 +5,5 @@ export let
     socket = writable(null),
     settingsOpen = writable(false),
     chatsOpen =writable(false),
-    userStore = persisted('userStore', {})
+    userStore = persisted('userStore', {}),
+    messages = persisted('messages', [])

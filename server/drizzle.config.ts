@@ -7,7 +7,8 @@ export default defineConfig({
     dbCredentials: {
         host: 'localhost',
         user: 'postgres',
-        password: '',
-        database: 'scrabble_chat'
+        // password: '',
+        database: 'scrabble_chat',
+        port: 5435
     },
 });

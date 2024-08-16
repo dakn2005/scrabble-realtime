@@ -1,3 +1,5 @@
+import { boolean } from "drizzle-orm/mysql-core";
+
 class TrieNode {
     end: boolean;
     children: Map<string, TrieNode>;
@@ -15,5 +17,28 @@ export default class Trie {
         let node: TrieNode = this.root;
         // wordarr: string = word.split('');
         node.end = true;
+
+        word.split('').forEach(element => {
+            if (!node.children.get(element)) {
+                node.children.set(element, new TrieNode());
+            }
+
+            node = node.children.get(element) as TrieNode
+        });
+
+        node.end = true
+    }
+
+    search(word: string) {
+        let node: TrieNode = this.root;
+
+        word.split('').forEach(element => {
+            if (node.children.get(element))
+                node = node.children.get(element) as TrieNode
+            else
+                return false
+        });
+
+        return node.end;
     }
 }

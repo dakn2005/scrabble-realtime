@@ -1,28 +1,48 @@
 <script>
   import { onMount, onDestroy } from "svelte";
-  import io from "socket.io-client";
 
   import * as Drawer from "$lib/components/ui/drawer";
   import * as Sheet from "$lib/components/ui/sheet";
 
   import "../../app.css";
-  import { socket, settingsOpen, chatsOpen, userStore } from "$lib/stores.js";
-  import { SOCKET_URL } from '$lib/constants.js';
+  import { socket, settingsOpen, chatsOpen, userStore, messages } from "$lib/stores.js";
+  import { SOCKET_URL, LANGS } from "$lib/constants.js";
 
   import Board from "$components/board/Board.svelte";
   import Chat from "$components/chat/Index.svelte";
 
-  $socket = io.connect(SOCKET_URL);
-
   const { username, game } = $userStore;
 
   onMount(() => {
-    $socket.emit("join_game", { username, game });
-  })
+    if (game.lang == LANGS.sheng) {
+      (async () =>{
+        let resp = await fetch(SOCKET_URL + "/api/games/trie?lang=sheng");
+        let trie = await resp.json();
+        // console.log(trie);
+      })()
+
+    }
+
+    $messages = [];
+
+  });
 
   onDestroy(() => {
-    $socket.emit("leave_game", {username, game})
-  })
+    $socket.emit("leave_game", { username, game: game.name });
+    $userStore = {};
+  });
+
+  $socket.on("receive_message", (data) => {
+    $messages = [
+      ...$messages,
+      {
+        message: data.message,
+        username: data.username,
+        __createdtime__: data.__createdtime__,
+      },
+    ];
+  });
+
 </script>
 
 <!-- <div class="drawer drawer-end">
@@ -67,6 +87,5 @@
     </Sheet.Header>
 
     <Chat />
-    
   </Sheet.Content>
 </Sheet.Root>

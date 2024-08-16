@@ -2,13 +2,12 @@
   import { onMount } from "svelte";
   import { persisted } from "svelte-persisted-store";
 
-  import { socket, userStore } from "$lib/stores.js";
+  import { socket, userStore, messages } from "$lib/stores.js";
 
   let { username } = $userStore;
-  let messages = persisted("messages", []);
 
   onMount( () => {
-    document.getElementById('chats-container').scrollTop = document.getElementById('chats-container').scrollHeight;
+    document.getElementById('chats-container').scrollTop = document.getElementById('chats-container')?.scrollHeight;
     
   })
 
@@ -28,7 +27,7 @@
       },
     ];
     
-    document.getElementById('chats-container').scrollTop = document.getElementById('chats-container').scrollHeight;
+    document.getElementById('chats-container').scrollTop = document.getElementById('chats-container')?.scrollHeight;
 
   });
 

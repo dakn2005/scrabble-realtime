@@ -5,6 +5,7 @@ import {
     pgTable,
     uniqueIndex,
     varchar,
+    json,
     serial,
     date,
 } from 'drizzle-orm/pg-core';
@@ -22,7 +23,7 @@ export const games = pgTable(
     {
         id: serial('id').notNull().primaryKey(),
         name: varchar('name', { length: 255 }).notNull(),
-        lang: varchar('name', { length: 25 }).notNull(),
+        lang: varchar('lang', { length: 25 }).notNull(),
         last_login: date('last_login', { mode: 'date' }).notNull().default(sql`now()`),
         created_by: varchar('created_by', { length: 255 }).notNull(),
         createddate: date('createddate', { mode: 'date' }).notNull().default(sql`now()`),
@@ -31,4 +32,13 @@ export const games = pgTable(
         gameNameUniqueIndex: uniqueIndex('gameNameUniqueIndex').on(sql`lower(${tab.name})`),
     })
 );
+
+export const game_state = pgTable(
+    'game_state',
+    {
+        game: varchar('name', { length: 255 }).primaryKey().notNull(),
+        state: json('state').notNull(),
+        
+    }
+)
 

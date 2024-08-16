@@ -3,7 +3,7 @@ import { Client } from "pg";
 // import mysql from 'mysql2';
 // import * as schema from './schema';
 
-const client = new Client({
+export const client = new Client({
     host: 'localhost',
     port: 5435,
     user: 'postgres',
@@ -16,6 +16,7 @@ const client = new Client({
 
 // export { client as connection };
 // export const db = drizzle(connection, { schema, mode });
+
 (async() => {
     await client.connect();
 })()

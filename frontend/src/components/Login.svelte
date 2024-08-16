@@ -4,51 +4,68 @@
   import { toast } from "svelte-sonner";
 
   import { SOCKET_URL, LANGS } from "$lib/constants.js";
-  import { userStore } from "$lib/stores.js";
+  import { userStore, socket } from "$lib/stores.js";
   import { Toaster } from "$lib/components/ui/sonner";
 
-  let username, game, lang;
-  let newuname = '', newgame = '', games = [];
+  let username, selectedgame;
+  let newuname = '', newgamename = '', newgame_lang, games = [];
+  let joining = false ;
 
   onMount(async () => {
     const resp = await fetch(SOCKET_URL + "/api/games");
     games = await resp.json();
+
   });
 
   const joinGame = () => {
-    // console.log(username, game)
-    // return
+    joining = true;
+    
+    let [gameName, gameLang] = selectedgame.split('|')
 
-    if (game == "" || username == "") {
-      alert("Please select a game and enter a username");
+    if (gameName == "" || username == "") {
+      toast.error("Please select a game and enter a username");
+      joining = false;
     } else {
-      $userStore = { username, game };
+
+      $userStore = { username, game: { name: gameName, lang: gameLang } };
+
+      $socket.emit("join_game", { username, game: gameName });
+
+      $socket.on('join_reply', data =>{
+        if (data.status == 'fail'){
+          toast.error(data.message)
+          joining = false
+        }
+        else if (data.status == 'success')
+          goto("/game");
+      })
+
       
-      goto("/game");
     }
   };
 
   const newGame = async (e) => {
 
-    if (newuname == '' || newgame == '') {
+    if (newuname == '' || newgamename == '') {
       e.preventDefault()
       toast.error('Please enter a username and game name');
+
       return
     }
 
     username = newuname;
-    game = newgame
+    selectedgame = `${newgamename}|${newgame_lang}`
 
     const resp = await fetch(SOCKET_URL + "/api/games/add", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ name: newgame, created_by: username }),
+      body: JSON.stringify({ name: newgamename, created_by: username, lang: newgame_lang }),
     });
 
     let res = await resp.json();
 
     if (res.status == "fail") {
-      toast.error(res.error);
+      toast.warning(res.error);
     } else {
       // let gameObj = res.games.find((g) => g.name == newgame);
       // game = gameObj.id
@@ -57,25 +74,28 @@
   };
 </script>
 
-<Toaster />
+<Toaster richColors position="bottom-center" closeButton/>
 
 <div class="w-full">
   <div class="card bg-slate-700 w-96 shadow-xl p-10 space-y-5 m-auto mt-48">
     <span class="m-auto text-4xl uppercase text-white">Karibu</span>
 
     <label class="input input-bordered input-md flex items-center gap-2">
-      username
+      <span class="text-xs text-slate-400"> username</span>
       <input type="text" class="grow" placeholder="e.g. Kimana" bind:value="{username}" />
-    </label>
+    </label> 
 
-    <select class="select select-bordered select-md w-full max-w-xs" bind:value="{game}">
-      <option>-- Select Game --</option>
+    <select class="select select-bordered select-md w-full max-w-xs" bind:value="{selectedgame}">
+      <option value="">-- Select Game --</option>
       {#each games as game (game.id)}
-        <option value="{game.name}">{game.name}</option>
+        <option value="{game.name}|{game.lang}">{game.name} ({game.lang})</option>
       {/each}
     </select>
 
-    <button class="btn btn-neutral w-full" style="width: 100%;" on:click="{joinGame}"> Join Game </button>
+    <button class="btn btn-neutral w-full" style="width: 100%;" on:click="{joinGame}"> 
+      Join Game 
+      <span class="loading loading-spinner loading-xs {joining ? 'visible' : 'invisible'}"></span>
+    </button>
 
     <button class="btn btn-outline btn-warning w-full" style="width: 100%;" onclick="new_game_modal.showModal()">
       <i class="fa-solid fa-plus"></i> New Game
@@ -90,19 +110,19 @@
         <h3 class="text-lg font-bold mb-4">+ Add</h3>
 
         <label class="input input-bordered input-md flex items-center gap-2 mb-3">
-          username
+          <span class="text-xs italic text-indigo-200">username</span>
           <input type="text" class="grow" placeholder="e.g. Kimana" bind:value="{newuname}" />
         </label>
 
         <label class="input input-bordered input-md flex items-center gap-2 mb-4">
-          <span class="text-xs">Game Name </span>
-          <input type="text" class="grow text-lg" placeholder="..." bind:value="{newgame}" />
+          <span class="text-xs italic text-indigo-200">Game Name </span>
+          <input type="text" class="grow text-lg" placeholder="..." bind:value="{newgamename}" />
         </label>
 
-        <select class="select select-bordered select-md w-full max-w-xs" bind:value="{lang}">
+        <select class="select select-bordered select-md w-full mb-4" bind:value="{newgame_lang}">
           <option>-- Select language --</option>
-          {#each LANGS as lang}
-            <option value="{lang}">{lang}</option>
+          {#each Object.values(LANGS) as lugha}
+            <option value="{lugha}">{lugha}</option>
           {/each}
         </select>
 
@@ -115,5 +135,6 @@
         <button>close</button>
       </form>
     </dialog>
+
   </div>
 </div>
