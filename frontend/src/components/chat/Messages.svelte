@@ -1,10 +1,16 @@
 <script>
+  import { onMount } from "svelte";
   import { persisted } from "svelte-persisted-store";
 
   import { socket, userStore } from "$lib/stores.js";
 
   let { username } = $userStore;
   let messages = persisted("messages", []);
+
+  onMount( () => {
+    document.getElementById('chats-container').scrollTop = document.getElementById('chats-container').scrollHeight;
+    
+  })
 
   // onDestroy(() => {
   //   $socket.off("receive_message");
@@ -21,6 +27,8 @@
         __createdtime__: data.__createdtime__,
       },
     ];
+    
+    document.getElementById('chats-container').scrollTop = document.getElementById('chats-container').scrollHeight;
 
   });
 
@@ -40,7 +48,7 @@
   }
 </script>
 
-{#if !messages || messages.length === 0}
+{#if !$messages || $messages.length === 0}
   <div class="hero bg-base-200" style="height: 80vh;">
     <div class="hero-content text-center">
       <div class="max-w-md">
@@ -51,14 +59,15 @@
     </div>
   </div>
 {:else}
-  {#each messages as msg}
+<div id="chats-container" style="max-height: 80vh; overflow: scroll;">
+  {#each $messages as msg}
     <div class="chat {username == msg.username ? 'chat-end' : 'chat-start'}">
       <div class="chat-bubble">
         <p>
-          <span class="justify-start">
+          <span class="justify-start text-xs">
             {msg.username}
           </span>
-          <span class="justify-end">
+          <span class="justify-end text-xs text-slate-400">
             {formatDateFromTimestamp(msg.__createdtime__)}
           </span>
         </p>
@@ -66,5 +75,6 @@
         {msg.message}
       </div>
     </div>
-  {/each}
+    {/each}
+  </div>
 {/if}

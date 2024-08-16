@@ -1,1 +1,0 @@
-ALTER TABLE "games" ADD COLUMN "createddate" date NOT NULL;

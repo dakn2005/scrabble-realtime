@@ -22,7 +22,7 @@ app.use(express.json())
 
 const server = http.createServer(app);
 
-let ioCorsUrl = process.env.DEBUG ? 'http://localhost:5173' : 'https://lesdaw-ip-105-163-0-0.tunnelmole.net';
+let ioCorsUrl = process.env.DEBUG ? 'http://localhost:5173' : process.env.SERVER_URL;
 
 // console.log(process.env.DEBUG, ioCorsUrl)
 
@@ -55,7 +55,7 @@ app.post('/api/games/add', async (req: Request, res: Response) => {
     } else {
         res.send({
             status: 'fail',
-            error: errorHandling(err.code, 'game')
+            error: errorHandling(err.code, 'Game')
         })
     }
 
@@ -70,7 +70,7 @@ const io = new Server(server, {
     },
 });
 
-const CHAT_BOT = 'KBot';
+const CHAT_BOT = 'Gamebot';
 // Add this
 let chatRoom = ''; // E.g. javascript, node,...
 let allUsers: IUser[] = []; // All users in current chat room

@@ -3,6 +3,6 @@ import { persisted } from 'svelte-persisted-store';
 
 export let 
     socket = writable(null),
-    settingsOpen = persisted('settingsOpen', false),
-    chatsOpen = persisted('chatsOpen', false),
+    settingsOpen = writable(false),
+    chatsOpen =writable(false),
     userStore = persisted('userStore', {})

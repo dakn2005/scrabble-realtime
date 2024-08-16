@@ -29,8 +29,8 @@ export const createGame = async(data: IGame) => {
     try{
          await db.insert(games).values({
             name: data.name,
+            lang: data.lang,
             created_by: data.created_by,
-            createddate: new Date()
         });
 
         return [true, null ]

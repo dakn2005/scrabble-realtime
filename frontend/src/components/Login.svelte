@@ -1,17 +1,14 @@
 <script>
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
-
-  import { SOCKET_URL } from "$lib/constants.js";
-  import { userStore } from "$lib/stores.js";
-  import { Toaster } from "$lib/components/ui/sonner";
   import { toast } from "svelte-sonner";
 
-  let username,
-    game,
-    newuname,
-    newgame,
-    games = [];
+  import { SOCKET_URL, LANGS } from "$lib/constants.js";
+  import { userStore } from "$lib/stores.js";
+  import { Toaster } from "$lib/components/ui/sonner";
+
+  let username, game, lang;
+  let newuname = '', newgame = '', games = [];
 
   onMount(async () => {
     const resp = await fetch(SOCKET_URL + "/api/games");
@@ -26,12 +23,21 @@
       alert("Please select a game and enter a username");
     } else {
       $userStore = { username, game };
+      
       goto("/game");
     }
   };
 
-  const newGame = async () => {
+  const newGame = async (e) => {
+
+    if (newuname == '' || newgame == '') {
+      e.preventDefault()
+      toast.error('Please enter a username and game name');
+      return
+    }
+
     username = newuname;
+    game = newgame
 
     const resp = await fetch(SOCKET_URL + "/api/games/add", {
       method: "POST",
@@ -44,8 +50,8 @@
     if (res.status == "fail") {
       toast.error(res.error);
     } else {
-      let gameObj = res.games.find((g) => g.name == newgame);
-      game = gameObj.id
+      // let gameObj = res.games.find((g) => g.name == newgame);
+      // game = gameObj.id
       joinGame();
     }
   };
@@ -65,7 +71,7 @@
     <select class="select select-bordered select-md w-full max-w-xs" bind:value="{game}">
       <option>-- Select Game --</option>
       {#each games as game (game.id)}
-        <option value="{game.id}">{game.name}</option>
+        <option value="{game.name}">{game.name}</option>
       {/each}
     </select>
 
@@ -77,6 +83,10 @@
 
     <dialog id="new_game_modal" class="modal">
       <div class="modal-box">
+        <form method="dialog">
+          <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+        </form>
+        
         <h3 class="text-lg font-bold mb-4">+ Add</h3>
 
         <label class="input input-bordered input-md flex items-center gap-2 mb-3">
@@ -88,6 +98,13 @@
           <span class="text-xs">Game Name </span>
           <input type="text" class="grow text-lg" placeholder="..." bind:value="{newgame}" />
         </label>
+
+        <select class="select select-bordered select-md w-full max-w-xs" bind:value="{lang}">
+          <option>-- Select language --</option>
+          {#each LANGS as lang}
+            <option value="{lang}">{lang}</option>
+          {/each}
+        </select>
 
         <form method="dialog">
           <button class="btn btn-primary w-full" style="width: 100%;" on:click="{newGame}"> Save </button>

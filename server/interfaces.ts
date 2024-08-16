@@ -13,8 +13,9 @@ interface IMessage {
 
 interface IGame {
     name: string
-    created_by: string,
-    createddate: Date
+    lang: string
+    created_by: string
+
 }
 
 export { IUser, IMessage, IGame }
