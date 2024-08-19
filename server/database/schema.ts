@@ -28,8 +28,8 @@ export const games = pgTable(
         created_by: varchar('created_by', { length: 255 }).notNull(),
         createddate: date('createddate', { mode: 'date' }).notNull().default(sql`now()`),
     },
-    (tab) => ({
-        gameNameUniqueIndex: uniqueIndex('gameNameUniqueIndex').on(sql`lower(${tab.name})`),
+    (table) => ({
+        gameNameUniqueIndex: uniqueIndex('gameNameUniqueIndex').on(sql`lower(${table.name})`),
     })
 );
 
@@ -38,7 +38,10 @@ export const game_state = pgTable(
     {
         game: varchar('name', { length: 255 }).primaryKey().notNull(),
         state: json('state').notNull(),
-        
-    }
+        updatedate: date('updatedate', { mode: 'date' }).notNull()
+    },
+    (table) => ({
+        gameUniqueIndex: uniqueIndex('gameUniqueIndex').on(sql`lower(${table.game})`),
+    })
 )
 

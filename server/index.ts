@@ -10,8 +10,8 @@ import cors from 'cors';
 import 'dotenv/config';
 import fs from 'fs';
 
-import { IUser } from './interfaces'
-import { saveMessage, readMessages, getGames, createGame } from './database/services/crud';
+import { IUser, TLetterBag } from './interfaces'
+import { saveMessage, readMessages, getGames, createGame, upsertGameState } from './database/services/crud';
 import leaveGame from './utils/leave-game';
 import errorHandling from './utils/errorHandling';
 import Trie from './utils/tries';
@@ -33,6 +33,7 @@ let ioCorsUrl = process.env.DEBUG ? 'http://localhost:5173' : process.env.SERVER
 // });
 
 let shengTrie = new Trie()
+let enTrie = new Trie()
 
 // load tries
 fs.readFileSync('./utils/dictionaries/sheng.txt', 'utf8')
@@ -48,7 +49,15 @@ fs.readFileSync('./utils/dictionaries/sheng.txt', 'utf8')
         } else {
             shengTrie.insert(word);
         }
-    })
+    });
+
+fs.readFileSync('./utils/dictionaries/en.txt', 'utf8')
+    .split('\n')
+    .forEach(word => {
+        if (word.split('').length > 1) {
+            enTrie.insert(word)
+        }
+    });
 
 app.get('/', (req: Request, res: Response) => {
     res.send('Hello World!');
@@ -99,10 +108,48 @@ const CHAT_BOT = 'Gamebot';
 // Add this
 let chatRoom = ''; // E.g. javascript, node,...
 let players: IUser[] = []; // All users in current chat room
-let playerWords = [];
 
-function matrixTraversal() {
 
+
+
+const calculateGameState = (players: IUser[], restart?: boolean) => {
+    let letterBag: string[] = [];
+
+    let lettersDistribution: TLetterBag = {
+        1: ['J', 'K', 'Q', 'X', 'Z'],
+        2: ['B', 'C', 'F', 'H', 'M', 'P', 'V', 'W', 'Y'],
+        3: ['G'],
+        4: ['D', 'L', 'S', 'U'],
+        6: ['N', 'R', 'T'],
+        8: ['O'],
+        9: ['A', 'I'],
+        12: ['E'],
+    }
+
+    if (players.length == 1 || restart) {
+        Object.keys(lettersDistribution).forEach(key => {
+            let cnter = parseInt(key)
+
+            lettersDistribution[cnter].forEach(letter => {
+                while (cnter > 0){
+                    letterBag.push(letter)
+                    cnter--
+                }
+            });
+        });
+
+    }
+
+
+    // await upsertGameState({
+    //     name: chatRoom,
+    //     state: {
+    //         letterBag,
+    //         tiles,
+    //         playerScores
+    //     },
+    //     updatedate: new Date()
+    // });
 }
 
 io.on('connection', (socket: Socket) => {
@@ -120,9 +167,17 @@ io.on('connection', (socket: Socket) => {
             return;
         }
 
+        // check if game is full
+        if (players.filter(p => p.game == game).length == 4) {
+            socket.emit('join_reply', { status: 'fail', message: 'Game is full (max 4 players' });
+            return;
+        }
+
         socket.emit('join_reply', { status: 'success' });
 
-        socket.join(game); // Join the user to a socket room
+        // Join the user to a socket room
+        socket.join(game);
+
 
         let __createdtime__ = Date.now(); // Current timestamp
 
@@ -139,13 +194,15 @@ io.on('connection', (socket: Socket) => {
             __createdtime__,
         });
 
-        // Save the new user to the room
+        // Save the new user to the game
         chatRoom = game;
-        players.push({ id: socket.id, username, game: game });
+        players.push({ id: socket.id, username, game });
         let chatRoomUsers = players.filter((user) => user?.game === game);
 
         socket.to(game).emit('chatroom_users', chatRoomUsers);
         socket.emit('chatroom_users', chatRoomUsers);
+
+
 
         // (async () => {
         //     let all_msgs = await readMessages(game);
@@ -200,14 +257,16 @@ io.on('connection', (socket: Socket) => {
         }
     });
 
-    socket.on('submit_word', (data) => {
+    socket.on('submit_words', (data) => {
         // TODO: check for word validity
-        // TODO: move these checks to frontend
-        if (data.lang == 'English') {
+        
+        console.log(data)
+
+        if (data.userdetails.game.lang == 'English') {
             // if eng, use the api below
             // https://scrabblechecker.collinsdictionary.com/check/api/index.php?key=aa&isFriendly=1&nocache=1723803287116
         }
-        else if (data.lang == 'Sheng') {
+        else if (data.userdetails.game.lang == 'Sheng') {
             // https://lughayangu.com/sheng
             // https://kenyanmagazine.co.ke/200-sheng-words-and-their-meanings/
             let isword = shengTrie.search(data.word);

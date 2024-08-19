@@ -2,8 +2,8 @@ import { eq, lt, gte, ne } from 'drizzle-orm';
 import { DrizzleError } from 'drizzle-orm';
 
 import {db} from '../conn';
-import { games, messages } from '../schema';
-import {IMessage, IGame} from '../../interfaces';
+import { game_state, games, messages } from '../schema';
+import {IMessage, IGame, IGameStateTable} from '../../interfaces';
 
 export const saveMessage = async (data: IMessage) =>{
 
@@ -34,6 +34,27 @@ export const createGame = async(data: IGame) => {
         });
 
         return [true, null ]
+    }catch(e: DrizzleError | any){
+        return [false, e]
+    }
+}
+
+export const upsertGameState = async(data: IGameStateTable) => {
+    try{
+        await db
+            .insert(game_state)
+            .values({
+                game: data.name,
+                state: data.state,
+                updatedate: new Date()
+            })
+            .onConflictDoUpdate({
+                target: game_state.game,
+                set:{
+                    state: data.state,
+                    updatedate: new Date()
+                }
+            })
     }catch(e: DrizzleError | any){
         return [false, e]
     }

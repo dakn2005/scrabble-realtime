@@ -1,10 +1,10 @@
 <script>
-  export let letter;
+  export let letter, score;
 </script>
 
 <div class="square">
   <div class="letter-space no-select">
-    {letter.toUpperCase()}
+    <span class="text-2xl">{letter.toUpperCase()}</span><sub class="text-xs">{score}</sub>
   </div>
 </div>
 

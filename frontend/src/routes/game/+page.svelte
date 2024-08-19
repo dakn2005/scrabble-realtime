@@ -1,25 +1,32 @@
 <script>
   import { onMount, onDestroy } from "svelte";
-
   import * as Drawer from "$lib/components/ui/drawer";
   import * as Sheet from "$lib/components/ui/sheet";
-
+  import io from "socket.io-client";
+  import { Toaster } from "$lib/components/ui/sonner";
+  
   import "../../app.css";
   import { socket, settingsOpen, chatsOpen, userStore, messages } from "$lib/stores.js";
   import { SOCKET_URL, LANGS } from "$lib/constants.js";
-
+  
   import Board from "$components/board/Board.svelte";
   import Chat from "$components/chat/Index.svelte";
-
+  
   const { username, game } = $userStore;
-
+  
   onMount(() => {
+
+    if (!$socket)
+      $socket = io.connect(SOCKET_URL);
+
     if (game.lang == LANGS.sheng) {
-      (async () =>{
-        let resp = await fetch(SOCKET_URL + "/api/games/trie?lang=sheng");
-        let trie = await resp.json();
-        // console.log(trie);
-      })()
+
+      // * moved to backend
+      // (async () =>{
+      //   let resp = await fetch(SOCKET_URL + "/api/games/trie?lang=sheng");
+      //   let trie = await resp.json();
+      //   // console.log(trie);
+      // })()
 
     }
 
@@ -27,21 +34,20 @@
 
   });
 
-  onDestroy(() => {
-    $socket.emit("leave_game", { username, game: game.name });
-    $userStore = {};
-  });
+  $: if ($socket){
+    
+    $socket.on("receive_message", (data) => {
+      $messages = [
+        ...$messages,
+        {
+          message: data.message,
+          username: data.username,
+          __createdtime__: data.__createdtime__,
+        },
+      ];
+    });
 
-  $socket.on("receive_message", (data) => {
-    $messages = [
-      ...$messages,
-      {
-        message: data.message,
-        username: data.username,
-        __createdtime__: data.__createdtime__,
-      },
-    ];
-  });
+  }
 
 </script>
 
@@ -56,6 +62,7 @@
     </ul>
   </div>
 </div> -->
+<Toaster richColors position="bottom-center" closeButton/>
 
 <!-- <button on:click={() => sideOpen = true}>Open</button> -->
 <Board />

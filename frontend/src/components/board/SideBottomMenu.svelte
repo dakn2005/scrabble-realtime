@@ -1,13 +1,16 @@
 <script>
   import { goto } from "$app/navigation";
-  import { settingsOpen, chatsOpen } from "$lib/stores.js";
+  import { settingsOpen, chatsOpen, socket, userStore, messages } from "$lib/stores.js";
 
-  export let isbottom = false, setToggleSideBar;
+  export let submit, isbottom = false, setToggleSideBar;
+
+  const { username, game } = $userStore;
+
 </script>
 
 <ul class="{isbottom ? 'md:invisible menu bottommenu' : 'hidden md:menu sidemenu'} ">
   <li>
-    <button>
+    <button on:click={submit}>
       <i class="fa-solid fa-upload"></i>
       <span>submit</span>
     </button>
@@ -44,7 +47,13 @@
     </button>
   </li>
   <li>
-    <button on:click="{() => goto('/')}">
+    <button on:click="{() => {
+      $socket.emit("leave_game", { username, game: game?.name });
+      $userStore = {};
+      $messages = [];
+      
+      goto('/')
+    }}">
       <i class="fa-solid fa-circle-xmark md:text-lg text-red-600"></i>
       <span>exit</span>
     </button>
@@ -52,7 +61,7 @@
 
   {#if !isbottom}
     <li>
-      <button on:click="{setToggleSideBar()}">
+      <button on:click="{setToggleSideBar}">
         <div>
           <i class="fa-sharp fa-solid fa-angle-left"></i>
           <i class="fa-sharp fa-solid fa-chevron-right"></i>

@@ -18,4 +18,21 @@ interface IGame {
 
 }
 
-export { IUser, IMessage, IGame }
+interface IGameStateTable {
+    name: string
+    state: JSON
+    updatedate: Date
+}
+
+interface IState {
+    playerDictionary: {},
+
+}
+
+type TLetterBag = {
+    [dict_key: number]: string[]
+}
+
+// interface IGameSt
+
+export { IUser, IMessage, IGame,IGameStateTable, TLetterBag }
