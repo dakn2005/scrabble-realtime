@@ -1,5 +1,5 @@
 <script>
-  export let letter, score;
+  export let id, letter, score;
 </script>
 
 <div class="square">

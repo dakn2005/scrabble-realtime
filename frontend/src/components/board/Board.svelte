@@ -6,7 +6,7 @@
   import Tile from "./Tile.svelte";
   import Square from "./Square.svelte";
   import SideBottomMenu from "./SideBottomMenu.svelte";
-  import Queue from "$lib/queue.js";
+  // import Queue from "$lib/queue.js";
   import { socket, userStore } from "$lib/stores.js";
 
   let { username, game } = $userStore;
@@ -36,7 +36,7 @@
     12: ["E"],
   };
 
-  let directtions = [
+  let directions = [
     [0, 1],
     [1, 0],
     [0, -1],
@@ -67,7 +67,7 @@
     items = e.detail.items;
   }
 
-  let queue = new Queue();
+  let queue = []; //new Queue();
   let visited = new Set();
   let visitedvisited = new Set();
   let newlyVisited = new Set();
@@ -80,36 +80,61 @@
     // { id: 3, letter: "O" },
   ];
 
-  function proposedWordQueue(letter, position, score) {
-    // console.log(letter, position, score);
-    queue.enqueue([letter, position]);
-    // console.log(queue.printArray);
+  function proposedWordQueue(id, letter, position, score) {
 
-    newlyVisited.add(position);
+    let calcScore = () => {
+      proposedWordScore = 0;
+      wholeWordScores = [];
 
-    proposedWordScore += getLetterScore(letter);
+      for (let q of queue) {
+        let sko = q[3];
+        let lerrer = q[1];
 
-    if (score[0] > 1) {
-      if (score[1] == "tw" || score[1] == "dw" || score[1] == "m") wholeWordScores.push(score[0]);
-      else if (score[1] == "dl" || score[1] == "tl") proposedWordScore *= score[0];
+        if (sko[0] > 1) {
+          if (sko[1] == "tw" || sko[1] == "dw" || sko[1] == "m") {
+            wholeWordScores.push(sko[0]);
+            proposedWordScore += getLetterScore(lerrer);
+          } else if (sko[1] == "dl" || sko[1] == "tl") {
+            proposedWordScore += getLetterScore(lerrer) * sko[0];
+          }
+        } else {
+          proposedWordScore += getLetterScore(lerrer);
+        }
+      }
+
+    };
+
+    // reposition existing letter
+    if (queue.length > 0 && queue.find((arr) => arr[0] == id)) {
+      let idx = 0;
+      for (let zearr of queue) {
+        if (zearr[0] == id) break;
+        idx++;
+      }
+
+      queue[idx] = [id, letter, position, score];
+    } else {
+      queue.push([id, letter, position, score]);
+      newlyVisited.add(position);
     }
+
+    calcScore();
   }
 
   function getFullWord() {
     let theword = [],
-      colarr = [],
+      thewordcoords = [];
+    let colarr = [],
       rowarr = [];
 
     if (visited.size == 0) {
-      if (queue.size == 0) {
+      if (queue.length == 0) {
         toast.info("No word found");
         return;
       }
     }
 
-    let qarr = queue.printArray;
-
-    for (let [letter, pos] of qarr) {
+    for (let [,,pos] of queue) {
       rowarr.push(pos[0]);
       colarr.push(pos[1]);
     }
@@ -119,9 +144,9 @@
 
     let wordidentifier = (letter, coord, rowwise, colwise) => {
       theword.push(letter);
+      thewordcoords.push(coord);
 
-      for (let dir of directtions) {
-        let [dr, dc] = dir;
+      for (let [dr, dc] of directions) {
         let [newRow, newCol] = [coord[0] + dr, coord[1] + dc];
 
         if (newRow < 0 || newRow >= 15 || newCol < 0 || newCol >= 15) {
@@ -137,8 +162,10 @@
 
             if (newCol < coord[1]) {
               theword.unshift(visited_letter);
+              thewordcoords.unshift([newRow, newCol]);
             } else {
               theword.push(visited_letter);
+              thewordcoords.push([newRow, newCol]);
             }
 
             newCol += dc;
@@ -150,8 +177,10 @@
 
             if (newRow < coord[0]) {
               theword.unshift(visited_letter);
+              thewordcoords.unshift([newRow, newCol]);
             } else {
               theword.push(visited_letter);
+              thewordcoords.push([newRow, newCol]);
             }
 
             newRow += dr;
@@ -161,14 +190,14 @@
     };
 
     if (rowwise || colwise) {
-      for ([letter, pos] of qarr) {
+      for (let [,letter,pos,] of queue) {
         wordidentifier(letter, pos, rowwise, colwise);
       }
     } else {
-      return [[], "invalid word -_o_-"];
+      return [[], [], "invalid word :("];
     }
 
-    return [theword, null];
+    return [theword.join(""), thewordcoords, null];
   }
 
   function submit() {
@@ -177,42 +206,51 @@
       proposedWordScore *= s;
     });
 
-    let [proposedWord, error] = getFullWord();
+    let [proposedWord, proposedWordCoords, error] = getFullWord();
 
     if (error) {
-      toast.error(error);
+      toast.warning(error);
       return;
     }
 
-    let words = [proposedWord, proposedWordScore];
+    let words = [[proposedWord, proposedWordCoords, proposedWordScore]];
 
-    while (queue.size > 0) {
-      let [letter, pos] = queue.dequeue();
+    while (queue.length > 0) {
+      let [,letter, pos,] = queue.shift();
+
       visited.add(pos);
       wordmap.set(pos, letter);
 
       let score = getLetterScore(letter);
 
-      let derived_word = [letter];
+      let derivedWord = [letter];
+      let derivedWordCoords = [pos];
 
-      for (let dir of directtions) {
-        let [row, col] = dir;
-        let [newRow, newCol] = [pos[0] + row, pos[1] + col];
+      for (let [dr, dc] of directions) {
+        let [newRow, newCol] = [pos[0] + dr, pos[1] + dc];
 
         if (newRow < 0 || newRow >= 15 || newCol < 0 || newCol >= 15) {
           continue;
         }
 
-        while (visited.has([newRow, newCol]) && visitedvisited.has([newRow, newCol]) && !newlyVisited.has([newRow, newCol])) {
+        while (visited.has([newRow, newCol]) && !visitedvisited.has([newRow, newCol]) && !newlyVisited.has([newRow, newCol])) {
           let letter2 = wordmap.get([newRow, newCol]);
-          derived_word.push(letter2);
+
+          if (newRow < pos[0] || newCol < pos[1]) {
+            derivedWord.unshift(letter2);
+            derivedWordCoords.unshift([newRow, newCol]);
+          } else {
+            derivedWord.push(letter2);
+            derivedWordCoords.push([newRow, newCol]);
+          }
+
           score += getLetterScore(letter2);
 
-          [newRow, newCol] = [newRow + row, newCol + col];
+          [newRow, newCol] = [newRow + dr, newCol + dc];
         }
       }
 
-      if (derived_word.length > 1) words.push([derived_word.join(""), score]);
+      if (derivedWord.length > 1) words.push([derivedWord.join(""), derivedWordCoords, score]);
     }
 
     console.log({ words, userdetails: $userStore });
@@ -220,7 +258,7 @@
     // $socket.emit("submit_words", { lang: game.lang, words });
 
     //TODO: clear queue and newlyvisited
-    queue.clear();
+    queue = [];
     newlyVisited.clear();
   }
 
@@ -265,7 +303,7 @@
       <div class="rack" use:dndzone="{dndOptions}" on:finalize="{handleDnd}" on:consider="{handleDnd}">
         {#each items as item (item.id)}
           <div animate:flip="{{ duration: flipDurationMs }}">
-            <Tile letter="{item.letter}" score="{getLetterScore(item.letter)}" />
+            <Tile id="{item.id}" letter="{item.letter}" score="{getLetterScore(item.letter)}" />
           </div>
         {/each}
       </div>

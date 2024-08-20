@@ -6,10 +6,10 @@
 
   let { username } = $userStore;
 
-  onMount( () => {
-    document.getElementById('chats-container').scrollTop = document.getElementById('chats-container')?.scrollHeight;
-    
-  })
+  onMount(() => {
+    if (document.getElementById("chats-container"))
+      document.getElementById("chats-container").scrollTop = document.getElementById("chats-container")?.scrollHeight;
+  });
 
   // onDestroy(() => {
   //   $socket.off("receive_message");
@@ -17,7 +17,6 @@
   // });
 
   $socket.on("receive_message", (data) => {
-
     $messages = [
       ...$messages,
       {
@@ -27,8 +26,8 @@
       },
     ];
     
-    document.getElementById('chats-container').scrollTop = document.getElementById('chats-container')?.scrollHeight;
-
+    if (document.getElementById("chats-container")) 
+      document.getElementById("chats-container").scrollTop = document.getElementById("chats-container")?.scrollHeight;
   });
 
   // $socket.on("all_msgs", (allMsgs) => {
@@ -58,22 +57,22 @@
     </div>
   </div>
 {:else}
-<div id="chats-container" style="max-height: 80vh; overflow: scroll;">
-  {#each $messages as msg}
-    <div class="chat {username == msg.username ? 'chat-end' : 'chat-start'}">
-      <div class="chat-bubble">
-        <p>
-          <span class="justify-start text-xs">
-            {msg.username}
-          </span>
-          <span class="justify-end text-xs text-slate-400">
-            {formatDateFromTimestamp(msg.__createdtime__)}
-          </span>
-        </p>
+  <div id="chats-container" style="max-height: 80vh; overflow: scroll;">
+    {#each $messages as msg}
+      <div class="chat {username == msg.username ? 'chat-end' : 'chat-start'}">
+        <div class="chat-bubble">
+          <p>
+            <span class="justify-start text-xs">
+              {msg.username}
+            </span>
+            <span class="justify-end text-xs text-slate-400">
+              {formatDateFromTimestamp(msg.__createdtime__)}
+            </span>
+          </p>
 
-        {msg.message}
+          {msg.message}
+        </div>
       </div>
-    </div>
     {/each}
   </div>
 {/if}

@@ -19,7 +19,7 @@
     // let value = e.target.getAttribute('data-item').split(',');
     if (items[0]){
       let scoremultiplier = scoreMultiplier();
-      proposedWordQueue(items[0].letter, [row_id, tile_id], scoremultiplier)
+      proposedWordQueue(items[0].id, items[0].letter, [row_id, tile_id], scoremultiplier)
     }
   }
 
@@ -120,7 +120,7 @@
     <SpecialTile {tile_type} />
   {:else}
     {#each items as tile (tile.id)}
-      <Tile letter="{tile.letter}" score={getLetterScore(tile.letter)} />
+      <Tile id={tile.id} letter="{tile.letter}" score={getLetterScore(tile.letter)} />
     {/each}
   {/if}
 </div>
