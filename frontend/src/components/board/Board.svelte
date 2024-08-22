@@ -1,4 +1,5 @@
 <script>
+  import { onDestroy, onMount } from "svelte";
   import { dndzone } from "svelte-dnd-action";
   import { flip } from "svelte/animate";
   import { toast } from "svelte-sonner";
@@ -13,6 +14,19 @@
 
   let toggleSideBar = false;
 
+  onMount(() => {
+    if ($socket) {
+      $socket.emit("pick_tiles", { game, tiles_2_pick: 7 - items.length });
+    }
+
+  });
+
+  onDestroy(() => {
+    items = [];
+
+    // TODO: return tiles!
+  });
+
   // let letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
 
   let lettersScores = {
@@ -25,16 +39,16 @@
     10: ["Q", "Z"],
   };
 
-  let lettersDistribution = {
-    1: ["J", "K", "Q", "X", "Z"],
-    2: ["B", "C", "F", "H", "M", "P", "V", "W", "Y"],
-    3: ["G"],
-    4: ["D", "L", "S", "U"],
-    6: ["N", "R", "T"],
-    8: ["O"],
-    9: ["A", "I"],
-    12: ["E"],
-  };
+  // let lettersDistribution = {
+  //   1: ["J", "K", "Q", "X", "Z"],
+  //   2: ["B", "C", "F", "H", "M", "P", "V", "W", "Y"],
+  //   3: ["G"],
+  //   4: ["D", "L", "S", "U"],
+  //   6: ["N", "R", "T"],
+  //   8: ["O"],
+  //   9: ["A", "I"],
+  //   12: ["E"],
+  // };
 
   let directions = [
     [0, 1],
@@ -42,8 +56,6 @@
     [0, -1],
     [-1, 0],
   ];
-
-  let items = [];
 
   function getLetterScore(letter) {
     for (const [key, value] of Object.entries(lettersScores)) {
@@ -53,7 +65,7 @@
     }
   }
 
-  items = [
+  let items = [
     { id: 1, letter: "M" },
     { id: 2, letter: "B" },
     { id: 3, letter: "O" },
@@ -81,15 +93,11 @@
   ];
 
   function proposedWordQueue(id, letter, position, score) {
-
     let calcScore = () => {
       proposedWordScore = 0;
       wholeWordScores = [];
 
-      for (let q of queue) {
-        let sko = q[3];
-        let lerrer = q[1];
-
+      for (let [, lerrer, , sko] of queue) {
         if (sko[0] > 1) {
           if (sko[1] == "tw" || sko[1] == "dw" || sko[1] == "m") {
             wholeWordScores.push(sko[0]);
@@ -101,14 +109,13 @@
           proposedWordScore += getLetterScore(lerrer);
         }
       }
-
     };
 
     // reposition existing letter
     if (queue.length > 0 && queue.find((arr) => arr[0] == id)) {
       let idx = 0;
-      for (let zearr of queue) {
-        if (zearr[0] == id) break;
+      for (let [zeid, , ,] of queue) {
+        if (zeid == id) break;
         idx++;
       }
 
@@ -134,7 +141,7 @@
       }
     }
 
-    for (let [,,pos] of queue) {
+    for (let [, , pos] of queue) {
       rowarr.push(pos[0]);
       colarr.push(pos[1]);
     }
@@ -190,7 +197,7 @@
     };
 
     if (rowwise || colwise) {
-      for (let [,letter,pos,] of queue) {
+      for (let [, letter, pos] of queue) {
         wordidentifier(letter, pos, rowwise, colwise);
       }
     } else {
@@ -216,7 +223,7 @@
     let words = [[proposedWord, proposedWordCoords, proposedWordScore]];
 
     while (queue.length > 0) {
-      let [,letter, pos,] = queue.shift();
+      let [, letter, pos] = queue.shift();
 
       visited.add(pos);
       wordmap.set(pos, letter);
@@ -253,13 +260,13 @@
       if (derivedWord.length > 1) words.push([derivedWord.join(""), derivedWordCoords, score]);
     }
 
-    console.log({ words, userdetails: $userStore });
+    // console.log({ words, userdetails: $userStore });
 
-    // $socket.emit("submit_words", { lang: game.lang, words });
+    $socket.emit("submit_words", { lang: game.lang, words });
 
     //TODO: clear queue and newlyvisited
-    queue = [];
-    newlyVisited.clear();
+    // queue = [];
+    // newlyVisited.clear();
   }
 
   const setToggleSideBar = () => (toggleSideBar = !toggleSideBar);
@@ -273,6 +280,24 @@
     flipDurationMs,
     morphDisabled: true,
   };
+
+  $: if (socket) {
+    $socket.on("tiles_picked", (data) => {
+      let idx = 0;
+
+      if (items.length == 7) return;
+
+      data.forEach((t) => {
+        items.push({
+          id: idx++,
+          letter: t,
+        });
+      });
+
+      items = items;
+      // console.log(data, items);
+    });
+  }
 </script>
 
 <div class="game-container">
@@ -301,11 +326,13 @@
 
       <!-- user deck -->
       <div class="rack" use:dndzone="{dndOptions}" on:finalize="{handleDnd}" on:consider="{handleDnd}">
-        {#each items as item (item.id)}
-          <div animate:flip="{{ duration: flipDurationMs }}">
-            <Tile id="{item.id}" letter="{item.letter}" score="{getLetterScore(item.letter)}" />
-          </div>
-        {/each}
+        {#if items.length > 0}
+          {#each items as item (item.id)}
+            <div animate:flip="{{ duration: flipDurationMs }}">
+              <Tile id="{item.id}" letter="{item.letter}" score="{getLetterScore(item.letter)}" />
+            </div>
+          {/each}
+        {/if}
       </div>
 
       <SideBottomMenu isbottom="{true}" {submit} />
@@ -322,11 +349,12 @@
   .game-container {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    height: 100%;
     background-color: #272727;
     /* background-color: #fffae8; */
     justify-content: center;
     align-items: center;
+    padding-top: 40px;
   }
 
   .board {

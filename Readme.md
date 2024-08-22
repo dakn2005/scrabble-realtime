@@ -37,5 +37,16 @@ The project includes concepts and technologies specified below
 - socket.io
 - Typescript
 
+### Resources
+
+Dictionaries downloaded from:
+
+- Swahili - https://github.com/Kalebu/kamusi
+
+        recommended online dictionary - https://sw.glosbe.com/sw/sw
+
+- Sheng -  https://kenyanmagazine.co.ke/200-sheng-words-and-their-meanings/
+
+- English - Unix-based systems comes with their own english corpus -> goto /usr/share/dict
 
 

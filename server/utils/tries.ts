@@ -1,5 +1,3 @@
-import { boolean } from "drizzle-orm/mysql-core";
-
 class TrieNode {
     end: boolean;
     children: Map<string, TrieNode>;
@@ -10,9 +8,10 @@ class TrieNode {
     }
 }
 
+// * if words are represented in correct order, suffixtree is deprecated -> this saves memory
 export default class Trie {
     #prefixRoot: TrieNode = new TrieNode();
-    #suffixRoot: TrieNode = new TrieNode();
+    // #suffixRoot: TrieNode = new TrieNode();
 
     #insertAbstract(wordArr: string[], root: TrieNode){
         let node: TrieNode = root;
@@ -32,7 +31,7 @@ export default class Trie {
 
     insert(word: string): void {
         this.#insertAbstract(word.split(''), this.#prefixRoot);
-        this.#insertAbstract(word.split('').reverse(), this.#suffixRoot);
+        // this.#insertAbstract(word.split('').reverse(), this.#suffixRoot);
     }
 
     #searchAbstract(word: string, root: TrieNode): boolean {
@@ -49,6 +48,6 @@ export default class Trie {
     }
 
     search(word: string): boolean {
-        return this.#searchAbstract(word, this.#prefixRoot) || this.#searchAbstract(word, this.#suffixRoot)
+        return this.#searchAbstract(word, this.#prefixRoot) //|| this.#searchAbstract(word, this.#suffixRoot)
     }
 }

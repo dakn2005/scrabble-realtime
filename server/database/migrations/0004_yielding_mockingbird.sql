@@ -1,0 +1,1 @@
+ALTER TABLE "games" ADD COLUMN "use_scrabble_dictionary" boolean DEFAULT false NOT NULL;

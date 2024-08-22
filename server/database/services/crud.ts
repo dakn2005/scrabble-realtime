@@ -30,6 +30,7 @@ export const createGame = async(data: IGame) => {
          await db.insert(games).values({
             name: data.name,
             lang: data.lang,
+            use_scrabble_dictionary: data.use_scrabble_dictionary,
             created_by: data.created_by,
         });
 
@@ -44,18 +45,25 @@ export const upsertGameState = async(data: IGameStateTable) => {
         await db
             .insert(game_state)
             .values({
-                game: data.name,
-                state: data.state,
+                game: data.game,
+                letterbag: data.letterbag,
+                statistics: data.statistics,
                 updatedate: new Date()
             })
             .onConflictDoUpdate({
                 target: game_state.game,
                 set:{
-                    state: data.state,
+                    letterbag: data.letterbag,
+                    statistics: data.statistics,
                     updatedate: new Date()
                 }
             })
     }catch(e: DrizzleError | any){
         return [false, e]
     }
+}
+
+export const getGameState = async(game: string) => {
+    let res = await db.select().from(game_state).where(eq(game_state.game, game));
+    return res
 }

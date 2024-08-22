@@ -7,59 +7,60 @@
   import { userStore, socket } from "$lib/stores.js";
   import { Toaster } from "$lib/components/ui/sonner";
 
-  let username, selectedgame;
-  let newuname = '', newgamename = '', newgame_lang, games = [];
-  let joining = false ;
+  let username='kim', selectedgame;
+  let newuname = "",
+    newgamename = "",
+    newgame_lang,
+    games = [];
+  let joining = false;
 
   onMount(async () => {
     const resp = await fetch(SOCKET_URL + "/api/games");
     games = await resp.json();
-
   });
 
   const joinGame = () => {
     joining = true;
-    
-    let [gameName, gameLang] = selectedgame.split('|')
+
+    let [gameName, gameLang] = selectedgame.split("|");
 
     if (gameName == "" || username == "") {
       toast.error("Please select a game and enter a username");
       joining = false;
     } else {
-
       $userStore = { username, game: { name: gameName, lang: gameLang } };
 
       $socket.emit("join_game", { username, game: gameName });
 
-      $socket.on('join_reply', data =>{
-        if (data.status == 'fail'){
-          toast.error(data.message)
-          joining = false
-        }
-        else if (data.status == 'success')
-          goto("/game");
-      })
-
-      
+      $socket.on("join_reply", (data) => {
+        if (data.status == "fail") {
+          toast.error(data.message);
+          joining = false;
+        } else if (data.status == "success") goto("/game");
+      });
     }
   };
 
   const newGame = async (e) => {
+    if (newuname == "" || newgamename == "") {
+      e.preventDefault();
+      toast.error("Please enter a username and game name");
 
-    if (newuname == '' || newgamename == '') {
-      e.preventDefault()
-      toast.error('Please enter a username and game name');
-
-      return
+      return;
     }
 
     username = newuname;
-    selectedgame = `${newgamename}|${newgame_lang}`
+    selectedgame = `${newgamename}|${newgame_lang}`;
 
     const resp = await fetch(SOCKET_URL + "/api/games/add", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ name: newgamename, created_by: username, lang: newgame_lang }),
+      body: JSON.stringify({
+        name: newgamename,
+        created_by: username,
+        lang: newgame_lang,
+        use_scrabble_dictionary: use_en_scrabble_dict,
+      }),
     });
 
     let res = await resp.json();
@@ -72,9 +73,11 @@
       joinGame();
     }
   };
+
+  let use_en_scrabble_dict = true;
 </script>
 
-<Toaster richColors position="bottom-center" closeButton/>
+<Toaster richColors position="bottom-center" closeButton />
 
 <div class="w-full">
   <div class="card bg-slate-700 w-96 shadow-xl p-10 space-y-5 m-auto mt-48">
@@ -83,7 +86,7 @@
     <label class="input input-bordered input-md flex items-center gap-2">
       <span class="text-xs text-slate-400"> username</span>
       <input type="text" class="grow" placeholder="e.g. Kimana" bind:value="{username}" />
-    </label> 
+    </label>
 
     <select class="select select-bordered select-md w-full max-w-xs" bind:value="{selectedgame}">
       <option value="">-- Select Game --</option>
@@ -92,8 +95,8 @@
       {/each}
     </select>
 
-    <button class="btn btn-neutral w-full" style="width: 100%;" on:click="{joinGame}"> 
-      Join Game 
+    <button class="btn btn-neutral w-full" style="width: 100%;" on:click="{joinGame}">
+      Join Game
       <span class="loading loading-spinner loading-xs {joining ? 'visible' : 'invisible'}"></span>
     </button>
 
@@ -106,7 +109,7 @@
         <form method="dialog">
           <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
         </form>
-        
+
         <h3 class="text-lg font-bold mb-4">+ Add</h3>
 
         <label class="input input-bordered input-md flex items-center gap-2 mb-3">
@@ -116,7 +119,7 @@
 
         <label class="input input-bordered input-md flex items-center gap-2 mb-4">
           <span class="text-xs italic text-indigo-200">Game Name </span>
-          <input type="text" class="grow text-lg" placeholder="..." bind:value="{newgamename}" />
+          <input type="text" class="grow text-lg" bind:value="{newgamename}" placeholder="unique game name" />
         </label>
 
         <select class="select select-bordered select-md w-full mb-4" bind:value="{newgame_lang}">
@@ -126,15 +129,21 @@
           {/each}
         </select>
 
+        {#if newgame_lang == LANGS.en}
+          <label class="flex justify-center cursor-pointer gap-2 mt-3 mb-3">
+            <span class="italic" style="font-size: 9px;">:-) permissive mode(english corpus)</span>
+            <input type="checkbox" bind:checked="{use_en_scrabble_dict}" value="synthwave" class="toggle toggle-error" />
+            <span class="italic" style="font-size: 9px;">:-| serious mode(scrabble dictionary)</span>
+          </label>
+        {/if}
+
         <form method="dialog">
           <button class="btn btn-primary w-full" style="width: 100%;" on:click="{newGame}"> Save </button>
         </form>
-
       </div>
       <form method="dialog" class="modal-backdrop">
         <button>close</button>
       </form>
     </dialog>
-
   </div>
 </div>

@@ -15,7 +15,6 @@
   const { username, game } = $userStore;
   
   onMount(() => {
-
     if (!$socket)
       $socket = io.connect(SOCKET_URL);
 

@@ -10,11 +10,12 @@ import cors from 'cors';
 import 'dotenv/config';
 import fs from 'fs';
 
-import { IUser, TLetterBag } from './interfaces'
-import { saveMessage, readMessages, getGames, createGame, upsertGameState } from './database/services/crud';
+import { IUser, TLetterBag, ELangs, IGameStateTable } from './interfaces'
+import { getGames, createGame, upsertGameState, getGameState } from './database/services/crud';
 import leaveGame from './utils/leave-game';
 import errorHandling from './utils/errorHandling';
 import Trie from './utils/tries';
+import shuffle from './utils/shuffle';
 
 let app = express();
 
@@ -34,6 +35,15 @@ let ioCorsUrl = process.env.DEBUG ? 'http://localhost:5173' : process.env.SERVER
 
 let shengTrie = new Trie()
 let enTrie = new Trie()
+let shengLetters: Set<string> = new Set();
+let shengLetterSetter = (wrd: string) => {
+    const isAlpha =(str: string) => /^[a-zA-Z]*$/gi.test(str)
+    wrd.split('').forEach((element: string) => {
+        if (isAlpha(element)) {
+            shengLetters.add(element.toUpperCase())
+        }
+    });
+}
 
 // load tries
 fs.readFileSync('./utils/dictionaries/sheng.txt', 'utf8')
@@ -45,9 +55,11 @@ fs.readFileSync('./utils/dictionaries/sheng.txt', 'utf8')
         if (word.includes('/')) {
             word.split('/').forEach(wrd => {
                 shengTrie.insert(wrd)
+                shengLetterSetter(wrd)
             })
         } else {
             shengTrie.insert(word);
+            shengLetterSetter(word)
         }
     });
 
@@ -109,10 +121,7 @@ const CHAT_BOT = 'Gamebot';
 let chatRoom = ''; // E.g. javascript, node,...
 let players: IUser[] = []; // All users in current chat room
 
-
-
-
-const calculateGameState = (players: IUser[], restart?: boolean) => {
+const initEnLetterBag = (restart?: boolean): string[] => {
     let letterBag: string[] = [];
 
     let lettersDistribution: TLetterBag = {
@@ -127,11 +136,12 @@ const calculateGameState = (players: IUser[], restart?: boolean) => {
     }
 
     if (players.length == 1 || restart) {
-        Object.keys(lettersDistribution).forEach(key => {
-            let cnter = parseInt(key)
 
-            lettersDistribution[cnter].forEach(letter => {
-                while (cnter > 0){
+        Object.keys(lettersDistribution).forEach(key => {
+            lettersDistribution[parseInt(key)].forEach(letter => {
+                let cnter = parseInt(key)
+
+                while (cnter > 0) {
                     letterBag.push(letter)
                     cnter--
                 }
@@ -140,16 +150,8 @@ const calculateGameState = (players: IUser[], restart?: boolean) => {
 
     }
 
-
-    // await upsertGameState({
-    //     name: chatRoom,
-    //     state: {
-    //         letterBag,
-    //         tiles,
-    //         playerScores
-    //     },
-    //     updatedate: new Date()
-    // });
+    //random picking
+    return shuffle(letterBag);
 }
 
 io.on('connection', (socket: Socket) => {
@@ -178,7 +180,6 @@ io.on('connection', (socket: Socket) => {
         // Join the user to a socket room
         socket.join(game);
 
-
         let __createdtime__ = Date.now(); // Current timestamp
 
         // Send message to all users currently in the room, apart from the user that just joined
@@ -201,8 +202,6 @@ io.on('connection', (socket: Socket) => {
 
         socket.to(game).emit('chatroom_users', chatRoomUsers);
         socket.emit('chatroom_users', chatRoomUsers);
-
-
 
         // (async () => {
         //     let all_msgs = await readMessages(game);
@@ -259,14 +258,11 @@ io.on('connection', (socket: Socket) => {
 
     socket.on('submit_words', (data) => {
         // TODO: check for word validity
-        
+        // TODO: ensure words are represent in correct format from frontend - deprecate suffix tree
         console.log(data)
+        return
 
-        if (data.userdetails.game.lang == 'English') {
-            // if eng, use the api below
-            // https://scrabblechecker.collinsdictionary.com/check/api/index.php?key=aa&isFriendly=1&nocache=1723803287116
-        }
-        else if (data.userdetails.game.lang == 'Sheng') {
+        if (data.userdetails.game.lang == ELangs.sheng) {
             // https://lughayangu.com/sheng
             // https://kenyanmagazine.co.ke/200-sheng-words-and-their-meanings/
             let isword = shengTrie.search(data.word);
@@ -282,11 +278,48 @@ io.on('connection', (socket: Socket) => {
 
             if (isword) {
                 // socket.emit('word_valid', true)
+
             }
             else {
                 // socket.emit('word_valid', false)
             }
         }
+
+        if (data.userdetails.game.lang == ELangs.en) {
+            // if eng, use the api below
+            // https://scrabblechecker.collinsdictionary.com/check/api/index.php?key=aa&isFriendly=1&nocache=1723803287116
+        }
+
+    })
+
+    socket.on('pick_tiles', (data) => {
+        let { game, tiles_2_pick } = data;
+
+        if (tiles_2_pick == 0)
+            return
+
+        (async () => {
+            let gamestate = await getGameState(game.name);
+
+            let lb: string[];
+
+            if (game.lang == ELangs.sheng)
+                lb = gamestate.length == 0 ? shuffle([...shengLetters.values()]) : gamestate[0].letterbag;
+            else //if (game.lang == ELangs.en)
+                lb = gamestate.length == 0 ? initEnLetterBag(true) : gamestate[0].letterbag;
+
+            let tiles = lb.splice(0, tiles_2_pick);
+
+            socket.emit('tiles_picked', tiles);
+
+            await upsertGameState({
+                game: game.name,
+                letterbag: lb,
+                statistics: (gamestate[0]?.statistics ?? {}) as JSON,
+                updatedate: new Date()
+            });
+
+        })();
 
     })
 
