@@ -30,7 +30,7 @@
     } else {
       $userStore = { username, game: { name: gameName, lang: gameLang } };
 
-      $socket.emit("join_game", { username, game: gameName });
+      $socket.emit("join_game", { username, gameName });
 
       $socket.on("join_reply", (data) => {
         if (data.status == "fail") {
@@ -79,7 +79,7 @@
 
 <Toaster richColors position="bottom-center" closeButton />
 
-<div class="w-full">
+<div class="w-full " style="background-color: #fbf7f6;">
   <div class="card bg-slate-700 w-96 shadow-xl p-10 space-y-5 m-auto mt-48">
     <span class="m-auto text-4xl uppercase text-white">Karibu</span>
 

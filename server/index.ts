@@ -158,19 +158,19 @@ io.on('connection', (socket: Socket) => {
     // console.log(`User connected ${socket.id}`);
 
     socket.on('join_game', (data) => {
-        let { username, game } = data; // Data sent from client when join_room event emitted
+        let { username, gameName } = data; // Data sent from client when join_room event emitted
 
         username = username.toLowerCase()
         username = username.charAt(0).toUpperCase() + username.slice(1);
 
         // check is username already in game
-        if (players.find(user => user.game == game && user.username == username)) {
+        if (players.find(user => user.game == gameName && user.username == username)) {
             socket.emit('join_reply', { status: 'fail', message: 'Username already taken' });
             return;
         }
 
         // check if game is full
-        if (players.filter(p => p.game == game).length == 4) {
+        if (players.filter(p => p.game == gameName).length == 4) {
             socket.emit('join_reply', { status: 'fail', message: 'Game is full (max 4 players' });
             return;
         }
@@ -178,29 +178,29 @@ io.on('connection', (socket: Socket) => {
         socket.emit('join_reply', { status: 'success' });
 
         // Join the user to a socket room
-        socket.join(game);
+        socket.join(gameName);
 
         let __createdtime__ = Date.now(); // Current timestamp
 
         // Send message to all users currently in the room, apart from the user that just joined
-        socket.to(game).emit('receive_message', {
+        socket.to(gameName).emit('receive_message', {
             message: `${username} has joined the chat room`,
             username: CHAT_BOT,
             __createdtime__,
         });
 
-        socket.emit('receive_message', {
-            message: `Welcome ${username}`,
-            username: CHAT_BOT,
-            __createdtime__,
-        });
+        // socket.emit('receive_message', {
+        //     message: `Welcome ${username}`,
+        //     username: CHAT_BOT,
+        //     __createdtime__,
+        // });
 
         // Save the new user to the game
-        chatRoom = game;
-        players.push({ id: socket.id, username, game });
-        let chatRoomUsers = players.filter((user) => user?.game === game);
+        chatRoom = gameName;
+        players.push({ id: socket.id, username, game: gameName });
+        let chatRoomUsers = players.filter((user) => user?.game === gameName);
 
-        socket.to(game).emit('chatroom_users', chatRoomUsers);
+        socket.to(gameName).emit('chatroom_users', chatRoomUsers);
         socket.emit('chatroom_users', chatRoomUsers);
 
         // (async () => {
@@ -212,31 +212,31 @@ io.on('connection', (socket: Socket) => {
     });
 
     socket.on('send_message', (data) => {
-        const { message, username, game, __createdtime__: createddate } = data;
-        const rec = { message, username, game, createddate: new Date(createddate) }
+        const { gameName } = data;
+        const datum = {...data}
 
-        io.in(game).emit('receive_message', data); // Send to all users in room, including sender
+        socket.to(gameName).emit('receive_message', datum); // Send to all users in room, including sender
+
+        // console.log(data)
 
         // harperSaveMessage(message, username, room, __createdtime__) // Save message in db
         //     .then((response) => console.log(response))
         //     .catch((err) => console.log(err));
 
-        // console.log(rec)
-
         // saveMessage(rec)
     });
 
     socket.on('leave_game', (data) => {
-        const { username, game } = data;
+        const { username, gameName } = data;
         // console.log(username, game)
 
-        socket.leave(game);
+        socket.leave(gameName);
         const __createdtime__ = Date.now();
         // Remove user from memory
         players = leaveGame(socket.id, players);
         // console.log(allUsers)
-        socket.to(game).emit('chatroom_users', players);
-        socket.to(game).emit('receive_message', {
+        socket.to(gameName).emit('chatroom_users', players);
+        socket.to(gameName).emit('receive_message', {
             username: CHAT_BOT,
             message: `${username} has left the chat`,
             __createdtime__,
@@ -259,38 +259,47 @@ io.on('connection', (socket: Socket) => {
     socket.on('submit_words', (data) => {
         // TODO: check for word validity
         // TODO: ensure words are represent in correct format from frontend - deprecate suffix tree
-        console.log(data)
-        return
 
-        if (data.userdetails.game.lang == ELangs.sheng) {
+        let all_verified: boolean[] = [];
+
+        if (data.game.lang == ELangs.sheng) {
             // https://lughayangu.com/sheng
             // https://kenyanmagazine.co.ke/200-sheng-words-and-their-meanings/
-            let isword = shengTrie.search(data.word);
-
-            if (!isword) {
-                (async () => {
-                    const response = await fetch('https://lughayangu.com/' + data.word.toLowerCase());
-                    const status = await response.status
-
-                    isword = status == 200
-                })()
-            }
-
-            if (isword) {
-                // socket.emit('word_valid', true)
-
-            }
-            else {
-                // socket.emit('word_valid', false)
+            for (const word of data.words) {
+                let isword = shengTrie.search(data.word);
+                
+                if (!isword) {
+                    (async () => {
+                        const response = await fetch('https://lughayangu.com/' + data.word.toLowerCase());
+                        const status = await response.status
+                        
+                        isword = status == 200
+                    })()
+                }
+                
+                all_verified.push(isword)
             }
         }
 
-        if (data.userdetails.game.lang == ELangs.en) {
+        if (data.game.lang == ELangs.en) {
             // if eng, use the api below
             // https://scrabblechecker.collinsdictionary.com/check/api/index.php?key=aa&isFriendly=1&nocache=1723803287116
         }
 
-    })
+        socket.to(data.game.name).emit('words_submitted', {
+            newlyVisited: data.newlyVisited,
+            status: 'broadcast',
+        });
+
+        socket.emit('words_submitted', {
+            status: all_verified.every(v => v == true) ? 'fiti' : 'chorea',
+        });
+
+    });
+
+    socket.on('player_playing', (data) => {
+        socket.to(data.game).emit('player_playing', data.nv)
+    });
 
     socket.on('pick_tiles', (data) => {
         let { game, tiles_2_pick } = data;
@@ -321,7 +330,7 @@ io.on('connection', (socket: Socket) => {
 
         })();
 
-    })
+    });
 
 });
 

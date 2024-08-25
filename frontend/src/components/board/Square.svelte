@@ -4,7 +4,7 @@
   import Tile from "./Tile.svelte";
   import SpecialTile from "./SpecialTile.svelte";
 
-  export let row_id, tile_id, getLetterScore, proposedWordQueue, items = [];
+  export let row_id, tile_id, getLetterScore, proposedWordQueue, items = [], disabled = false;
 
   let isSpecial = false,
     tile_type = "";
@@ -14,13 +14,15 @@
   }
 
   function finalizeDnd(e) {
-    items = e.detail.items;
-    
+    items = e.detail.items;    
     // let value = e.target.getAttribute('data-item').split(',');
     if (items[0]){
       let scoremultiplier = scoreMultiplier();
       proposedWordQueue(items[0].id, items[0].letter, [row_id, tile_id], scoremultiplier)
     }
+    // else{
+    //   console.log(e.detail.items)
+    // }
   }
 
   // based on the board from: https://www.solitaireparadise.com/games_list/scrabble-online.html
@@ -84,11 +86,13 @@
       switch (mapper[tile_id]) {
         case "tw":
         case "tl":
-           squareScore = 3
+           squareScore = 3;
+           break;
         case "dw":
         case "dl":
         case "m":
-          squareScore = 2
+          squareScore = 2;
+          break;
       }
     }
 
@@ -109,6 +113,7 @@
     items,
     dropTargetStyle: {},
     flipDurationMs: 100,
+    dragDisabled: disabled,
   };
 
   // $: console.log(items)

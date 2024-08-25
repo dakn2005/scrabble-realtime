@@ -8,7 +8,7 @@
 
 </script>
 
-<ul class="{isbottom ? 'md:invisible menu bottommenu' : 'hidden md:menu sidemenu'} mt-auto mb-auto">
+<ul class="{isbottom ? 'md:invisible menu bottommenu' : 'hidden md:menu sidemenu mt-24 mb-auto'}">
   <li>
     <button on:click={submit}>
       <i class="fa-solid fa-upload"></i>
@@ -50,7 +50,7 @@
   </li>
   <li>
     <button on:click="{() => {
-      $socket.emit("leave_game", { username, game: game?.name });
+      $socket.emit("leave_game", { username, gameName: game?.name });
       $userStore = {};
       $messages = [];
       
@@ -88,7 +88,7 @@
   }
   /* bottom menu */
   ul.bottommenu {
-    @apply menu-horizontal bg-base-200 rounded-box m-auto mt-14 p-0;
+    @apply menu-horizontal bg-base-200 rounded-box m-auto mt-14 mb-10 p-0;
   }
 
   ul.bottommenu > li > button {

@@ -7,8 +7,11 @@ const config = {
   content: ["./src/**/*.{html,js,svelte,ts}"],
   safelist: ["light"],
   plugins: [
-    daisyui
+    daisyui,
   ],
+  daisyui: {
+    themes: ["cupcake"], //, "dark", "cupcake"
+  },
   theme: {
     container: {
       center: true,

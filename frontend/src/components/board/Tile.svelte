@@ -19,6 +19,14 @@
     background-color: #FFF6EB;
 	}
 
+  .fiti{
+    @apply bg-lime-400 text-white;
+  }
+
+  .chorea{
+    @apply bg-amber-400;
+  }
+
 	.letter-space {
     font-size: 2vmin;
     color: #707070;
