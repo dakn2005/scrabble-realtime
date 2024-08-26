@@ -28,9 +28,10 @@
       toast.error("Please select a game and enter a username");
       joining = false;
     } else {
-      $userStore = { username, game: { name: gameName, lang: gameLang } };
+      let ustore = { username, game: { name: gameName, lang: gameLang } };
+      $userStore = ustore;
 
-      $socket.emit("join_game", { username, gameName });
+      $socket.emit("join_game", { username: ustore.username, game: ustore.game });
 
       $socket.on("join_reply", (data) => {
         if (data.status == "fail") {
@@ -104,6 +105,7 @@
       <i class="fa-solid fa-plus"></i> New Game
     </button>
 
+    <!-- New Game -->
     <dialog id="new_game_modal" class="modal">
       <div class="modal-box">
         <form method="dialog">
@@ -129,13 +131,14 @@
           {/each}
         </select>
 
+        <!-- 
         {#if newgame_lang == LANGS.en}
           <label class="flex justify-center cursor-pointer gap-2 mt-3 mb-3">
             <span class="italic" style="font-size: 9px;">:-) permissive mode(english corpus)</span>
             <input type="checkbox" bind:checked="{use_en_scrabble_dict}" value="synthwave" class="toggle toggle-error" />
             <span class="italic" style="font-size: 9px;">:-| serious mode(scrabble dictionary)</span>
           </label>
-        {/if}
+        {/if} -->
 
         <form method="dialog">
           <button class="btn btn-primary w-full" style="width: 100%;" on:click="{newGame}"> Save </button>

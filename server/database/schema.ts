@@ -40,6 +40,7 @@ export const game_state = pgTable(
     'game_state',
     {
         game: varchar('game', { length: 255 }).primaryKey().notNull(),
+        currentplayer: varchar('current_player', { length: 255 }).notNull(),
         letterbag: text('letterbag').array().notNull(),
         statistics: json('statistics').notNull(),
         createddate: date('createddate', { mode: 'date' }).notNull().default(sql`now()`),

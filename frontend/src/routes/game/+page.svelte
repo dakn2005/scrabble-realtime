@@ -4,69 +4,77 @@
   import * as Sheet from "$lib/components/ui/sheet";
   import io from "socket.io-client";
   import { Toaster } from "$lib/components/ui/sonner";
-  
+  import { goto } from "$app/navigation";
+
   import "../../app.css";
   import { socket, settingsOpen, chatsOpen, userStore, messages } from "$lib/stores.js";
   import { SOCKET_URL, LANGS } from "$lib/constants.js";
-  
+
   import Board from "$components/board/Board.svelte";
   import Chat from "$components/chat/Index.svelte";
-  
+
   const { username, game } = $userStore;
-  
+
+  let gamePlayers=[];
+  let currentPlayer, pickedTiles;
+
   onMount(() => {
-    if (!$socket)
-      $socket = io.connect(SOCKET_URL);
+
+    if (!$socket) {
+      $socket = io.connect(SOCKET_URL); 
+
+      // rejoin room - below not working!
+      // if (username == "") {
+      //   goto('/')
+      // } else {
+      //   $socket.emit("join_game", { username, game: game.name });
+      // }
+    }
 
     if (game.lang == LANGS.sheng) {
-
       // * moved to backend
       // (async () =>{
       //   let resp = await fetch(SOCKET_URL + "/api/games/trie?lang=sheng");
       //   let trie = await resp.json();
       //   // console.log(trie);
       // })()
-
     }
 
     $messages = [];
-
   });
 
   $: if ($socket){
-    
-    $socket.on("receive_message", (data) => {
-      console.log(data)
 
-      $messages = [
-        ...$messages,
-        {
-          message: data.message,
-          username: data.username,
-          __createdtime__: data.__createdtime__,
-        },
-      ];
+    $socket.on('ingame_players', data=>{
+      gamePlayers = data
+    });
+
+    $socket.on('current_player', player => {
+      currentPlayer = player
+    });
+
+    $socket.on("tiles_picked", (data) => {
+      let idx = 0;
+
+      if (pickedTiles.length == 7) return;
+
+      data.forEach((t) => {
+        pickedTiles.push({
+          id: idx++,
+          letter: t,
+        });
+      });
     });
 
   }
-
+  
 </script>
 
-<!-- <div class="drawer drawer-end">
-  <input id="chat-drawer" type="checkbox" class="drawer-toggle" />
-  <div class="drawer-content">Content here</div>
-  <div class="drawer-side">
-    <label for="chat-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
-    <ul class="menu bg-base-200 text-base-content min-h-full w-80 p-4">
-      <li><a>Sidebar Item 1</a></li>
-      <li><a>Sidebar Item 2</a></li>
-    </ul>
-  </div>
-</div> -->
-<Toaster richColors position="bottom-center" closeButton/>
+
+<Toaster richColors position="bottom-center" closeButton />
 
 <!-- <button on:click={() => sideOpen = true}>Open</button> -->
-<Board />
+<Board {currentPlayer} {pickedTiles} />
 <!-- <label for="my-drawer" class="btn btn-primary">Side Menu</label> -->
 
 <Drawer.Root bind:open="{$settingsOpen}">
@@ -79,6 +87,19 @@
 
     <!-- divider here -->
     <!-- users[scores] | tiles left | turn history |  -->
+     <div class="flex flex-row">
+      <div class="grid grid-cols-2 gap-3">
+        {#each gamePlayers as player}
+          <button class="btn {player.username == currentPlayer ? 'btn-success' : ''}">
+            {player.username}
+            <div class="badge">{0}</div>
+          </button>
+        {/each}
+      </div>
+
+      <div class="w-1/3"></div>
+      <div class="w-1/3"></div>
+     </div>
 
     <Drawer.Footer>
       <Drawer.Close>Cancel</Drawer.Close>

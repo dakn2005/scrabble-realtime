@@ -46,6 +46,7 @@ export const upsertGameState = async(data: IGameStateTable) => {
             .insert(game_state)
             .values({
                 game: data.game,
+                currentplayer: data.currentplayer,
                 letterbag: data.letterbag,
                 statistics: data.statistics,
                 updatedate: new Date()
@@ -53,6 +54,7 @@ export const upsertGameState = async(data: IGameStateTable) => {
             .onConflictDoUpdate({
                 target: game_state.game,
                 set:{
+                    currentplayer: data.currentplayer,
                     letterbag: data.letterbag,
                     statistics: data.statistics,
                     updatedate: new Date()

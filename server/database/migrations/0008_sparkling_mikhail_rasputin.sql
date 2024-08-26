@@ -1,0 +1,1 @@
+ALTER TABLE "game_state" ALTER COLUMN "current_player" SET NOT NULL;

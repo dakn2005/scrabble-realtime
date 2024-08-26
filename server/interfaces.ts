@@ -20,8 +20,9 @@ interface IGame {
 
 interface IGameStateTable {
     game: string
+    currentplayer: string
     letterbag: string[]
-    statistics: JSON
+    statistics: JSON | unknown
     updatedate: Date
 }
 

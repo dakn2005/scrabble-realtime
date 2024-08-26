@@ -3,34 +3,40 @@
   import { dndzone } from "svelte-dnd-action";
   import { flip } from "svelte/animate";
   import { toast } from "svelte-sonner";
-  import { v4 as uuidv4 } from "uuid";
+  import { ulid } from "ulid";
 
   import Tile from "./Tile.svelte";
   import Square from "./Square.svelte";
   import SideBottomMenu from "./SideBottomMenu.svelte";
   // import Queue from "$lib/queue.js";
-  import { socket, userStore } from "$lib/stores.js";
+  import { socket, userStore, messages } from "$lib/stores.js";
+  
+  export let  currentPlayer;
+  export let pickedTiles = [
+    // { id: ulid(), letter: "M" },
+    // { id: ulid(), letter: "B" },
+    // { id: ulid(), letter: "O" },
+    // { id: ulid(), letter: "G" },
+    // { id: ulid(), letter: "I" },
+    // { id: ulid(), letter: "D" },
+    // { id: ulid(), letter: "I" },
+  ];
 
   let { username, game } = $userStore;
 
-  // TODO: set user from server buana!
-  let currentUser = username;
-
   let toggleSideBar = false;
 
-  onMount(() => {
-    if ($socket) {
-      $socket.emit("pick_tiles", { game, tiles_2_pick: 7 - pickedLetters.length });
-    }
-  });
+  // onMount(() => {
+  //   if ($socket) {
+  //     $socket.emit("pick_tiles", { game, tiles_2_pick: 7 - pickedLetters.length });
+  //   }
+  // });
 
   onDestroy(() => {
-    pickedLetters = [];
+    pickedTiles = [];
 
     // TODO: return tiles!
   });
-
-  // let letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
 
   let lettersScores = {
     1: ["A", "E", "I", "O", "U", "L", "N", "S", "T", "R"],
@@ -41,17 +47,6 @@
     8: ["J", "X"],
     10: ["Q", "Z"],
   };
-
-  // let lettersDistribution = {
-  //   1: ["J", "K", "Q", "X", "Z"],
-  //   2: ["B", "C", "F", "H", "M", "P", "V", "W", "Y"],
-  //   3: ["G"],
-  //   4: ["D", "L", "S", "U"],
-  //   6: ["N", "R", "T"],
-  //   8: ["O"],
-  //   9: ["A", "I"],
-  //   12: ["E"],
-  // };
 
   let directions = [
     [0, 1],
@@ -68,35 +63,24 @@
     }
   }
 
-  let pickedLetters = [
-    { id: 1, letter: "M" },
-    { id: 2, letter: "B" },
-    { id: 3, letter: "O" },
-    { id: 4, letter: "G" },
-    { id: 5, letter: "I" },
-    { id: 6, letter: "D" },
-    { id: 7, letter: "I" },
-  ];
-
   function handleDnd(e) {
-    pickedLetters = e.detail.items;
+    pickedTiles = e.detail.items;
   }
 
   let queue = []; //new Queue();
   let visited = new Set();
-  let newlyVisited = new Map();
+  let newlyVisited = new Map(), newlyVisitedBroadcast = new Map();
+
   let wordMap = new Map();
   let wholeWordScores = [];
-  let proposedWordScore = 0;
-  let newlySubbmittedWord = [
-    { id: 1, letter: "M" },
-    { id: 2, letter: "B" },
-    { id: 3, letter: "O" },
-  ];
+  let proposedWordScore = 0; 
+  // let newlySubbmittedWord = [
+  //   { id: 1, letter: "M" },
+  //   { id: 2, letter: "B" },
+  //   { id: 3, letter: "O" },
+  // ];
 
   function proposedWordQueue(id, letter, position, score) {
-    // console.log(id, letter, position, score)
-
     let calcScore = () => {
       proposedWordScore = 0;
       wholeWordScores = [];
@@ -115,23 +99,32 @@
       }
     };
 
-    // reposition existing letter
+    // update existing letter grid pos
     if (queue.length > 0 && queue.find((arr) => arr[0] == id)) {
       let idx = 0;
-      for (let [zeid, , ,] of queue) {
-        if (zeid == id) break;
+      for (let [zeid, , oldPos] of queue) {
+        if (zeid == id) {
+          break;
+        }
         idx++;
       }
 
       queue[idx] = [id, letter, position, score];
+      
+      newlyVisited.clear();
+      queue.forEach(q=>{
+        newlyVisited.set(`${q[2][0]},${q[2][1]}`, q[1]);
+      })
+      
     } else {
       queue.push([id, letter, position, score]);
       newlyVisited.set(`${position[0]},${position[1]}`, letter);
-      $socket.emit("player_playing", {
-        nv: newlyVisited,
-        game,
-      });
     }
+
+    $socket.emit("player_playing", {
+      nv: Object.fromEntries(newlyVisited),
+      game,
+    });
 
     calcScore();
   }
@@ -139,23 +132,10 @@
   function getFullWord() {
     let theword = [],
       thewordcoords = [];
+
     let colarr = [],
       rowarr = [];
 
-    if (wordMap.size == 0) {
-      if (queue.length == 0) {
-        toast.info("No word found");
-        return;
-      }
-    }
-
-    for (let [, , pos] of queue) {
-      rowarr.push(pos[0]);
-      colarr.push(pos[1]);
-    }
-
-    let rowwise = Math.max(...rowarr) - Math.min(...rowarr) == 0;
-    let colwise = Math.max(...colarr) - Math.min(...colarr) == 0;
 
     let wordidentifier = (letter, coord, rowwise, colwise) => {
       let lastcoords = thewordcoords.length > 0 ? thewordcoords.at(-1) : null;
@@ -211,11 +191,74 @@
             newRow += dr;
           }
         }
+
       }
     };
 
+    if (wordMap.size == 0) {
+      if (queue.length == 0) {
+        return [[], [], "No word found"];
+      }
+    }
+  
+    if (wordMap.get('7,7') == undefined && newlyVisited.get('7,7') == undefined) {
+      return [[], [], "Beginning of game must have a letter in the middle tile"];
+    }
+
+    for (let [, , pos] of queue) {
+      rowarr.push(pos[0]);
+      colarr.push(pos[1]);
+    }
+    
+    let rowwise = Math.max(...rowarr) - Math.min(...rowarr) == 0;
+    let colwise = Math.max(...colarr) - Math.min(...colarr) == 0;
+    
+    // further validations
     if (rowwise || colwise) {
-      for (let [, letter, pos] of queue) {
+      let queueSort = {}
+      
+      for (let q of queue) {
+        let s = q[2][0]+q[2][1]
+        queueSort[s] = q
+      }
+      
+      colarr=[]
+      rowarr=[]
+      queue = Object.values(queueSort)
+
+      console.log(queue)
+
+      queue.forEach(q=>{
+        let pos = q[2]
+        rowarr.push(pos[0]);
+        colarr.push(pos[1]);
+      })
+      
+      rowarr.reduce((a, b) => {
+        let minus = Math.abs(a - b)
+        if ( minus > 1) {
+          colwise = false;
+          rowwise = false;
+        }
+
+        return b
+      });
+
+      colarr.reduce((a, b) => {
+        let minus = Math.abs(a - b)
+
+        if (minus > 1) {
+          rowwise = false;
+          colwise = false;
+        }
+
+        return b
+
+      });
+    }
+
+    if (rowwise || colwise) {
+      for (let [, letter, pos,] of queue) {
         wordidentifier(letter, pos, rowwise, colwise);
       }
     } else {
@@ -234,7 +277,7 @@
     let [proposedWord, proposedWordCoords, error] = getFullWord();
 
     if (error) {
-      toast.warning(error);
+      toast.info(error);
       return;
     }
 
@@ -279,45 +322,39 @@
 
     console.log({ words, userdetails: $userStore });
 
-    $socket.emit("submit_words", { username, game, words, newlyVisited });
+    // $socket.emit("submit_words", { username, game, words, newlyVisited });
   }
 
   const setToggleSideBar = () => (toggleSideBar = !toggleSideBar);
 
-  const boardGrid = Array.from({ length: 15 }, (_, i) => Array.from({ length: 15 }, (_, j) => ({ id: j })));
+  let boardGrid = Array.from({ length: 15 }, (_, i) => Array.from({ length: 15 }, (_, j) => ({ id: j })));
 
   const flipDurationMs = 300;
 
-  $: if (pickedLetters) {
+  $: if (pickedTiles) {
     // check whether id is in both pickedletters and queue, delete if so
-    let proposedIds = queue.map((q, i) => ({ [q[0]]: i }));
+    let proposedIds = {};
 
-    for (let { id, letter } of pickedLetters) if (Object.keys(proposedIds).includes(id)) queue.splice(proposedIds[id], 1);
+    queue.forEach((q, i) => {
+      proposedIds[q[0]] = i;
+    });
+
+    for (let { id } of pickedTiles) {
+      if (Object.keys(proposedIds).includes(id)) {
+        queue.splice(proposedIds[id], 1);
+      }
+    }
   }
 
   $: dndOptions = {
-    items: pickedLetters,
+    items: pickedTiles,
     flipDurationMs,
     morphDisabled: true,
     // dragDisabled: true,
   };
 
   $: if ($socket) {
-
-    $socket.on("tiles_picked", (data) => {
-      let idx = 0;
-
-      if (pickedLetters.length == 7) return;
-
-      data.forEach((t) => {
-        pickedLetters.push({
-          id: idx++,
-          letter: t,
-        });
-      });
-
-      pickedLetters = pickedLetters;
-    });
+    
 
     $socket.on("words_submitted", (data) => {
       if (data.status == "broadcast") {
@@ -334,14 +371,19 @@
       }
     });
 
-    $socket.on("player_playing", (nv) => {
-      console.log("player_playing");
+    $socket.on("player_playing", (data) => {
+      newlyVisitedBroadcast.clear();
 
-      nv.forEach((pos, l) => {
-        newlyVisited.set(pos, l);
+      Object.entries(data).forEach((nv) => {
+        let [pos, l] = nv;
+        newlyVisitedBroadcast.set(pos, l);
       });
+
+      // console.log(newlyVisitedBroadcast);
+      boardGrid = boardGrid;
     });
 
+   
   }
 </script>
 
@@ -359,10 +401,11 @@
         {#each boardGrid as row, i}
           <div class="board-row">
             {#each row as square}
-              {#if newlyVisited.length > 0 && newlyVisited.has(`${i}${square.id}`)}
-                <Square row_id="{i}" tile_id="{square.id}" {getLetterScore} {proposedWordQueue} items="{[{ id: uuidv4(), letter: newlyVisited.get(`${i}${square.id}`) }]}" disabled="{currentUser !== username}" />
+        
+              {#if newlyVisitedBroadcast.size > 0 && newlyVisitedBroadcast.has(`${i},${square.id}`)}
+                <Square row_id="{i}" tile_id="{square.id}" {getLetterScore} {proposedWordQueue} items="{[{ id: ulid(), letter: newlyVisitedBroadcast.get(`${i},${square.id}`) }]}" disabled="{currentPlayer !== username}" />
               {:else if wordMap.has(`${i}${square.id}`)}
-                <Square row_id="{i}" tile_id="{square.id}" {getLetterScore} {proposedWordQueue} items="{[{ id: uuidv4(), letter: wordMap.get(`${i}${square.id}`) }]}" disabled="{true}" />
+                <Square row_id="{i}" tile_id="{square.id}" {getLetterScore} {proposedWordQueue} items="{[{ id: ulid(), letter: wordMap.get(`${i},${square.id}`) }]}" disabled="{true}" />
               {:else}
                 <Square row_id="{i}" tile_id="{square.id}" {getLetterScore} {proposedWordQueue} />
               {/if}
@@ -372,9 +415,9 @@
       </div>
 
       <!-- user deck -->
-      <div class="rack" use:dndzone="{dndOptions}" on:finalize="{handleDnd}" on:consider="{handleDnd}" disabled>
-        {#if pickedLetters.length > 0}
-          {#each pickedLetters as item (item.id)}
+      <div class="rack" use:dndzone="{dndOptions}" on:finalize="{handleDnd}" on:consider="{handleDnd}" disabled="{currentPlayer !== username}">
+        {#if pickedTiles.length > 0}
+          {#each pickedTiles as item (item.id)}
             <div animate:flip="{{ duration: flipDurationMs }}">
               <Tile id="{item.id}" letter="{item.letter}" score="{getLetterScore(item.letter)}" />
             </div>
@@ -401,7 +444,7 @@
     /* background-color: #fffae8; */
     justify-content: center;
     align-items: center;
-    padding-top: 40px;
+    padding-top: 20px;
   }
 
   .board {
