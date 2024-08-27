@@ -27,8 +27,9 @@ export const getGames = async(roomId? : number) => {
 
 export const createGame = async(data: IGame) => {
     try{
+
          await db.insert(games).values({
-            name: data.name,
+            name: data.name.charAt(0).toUpperCase() + data.name.slice(1),
             lang: data.lang,
             use_scrabble_dictionary: data.use_scrabble_dictionary,
             created_by: data.created_by,
@@ -60,6 +61,20 @@ export const upsertGameState = async(data: IGameStateTable) => {
                     updatedate: new Date()
                 }
             })
+    }catch(e: DrizzleError | any){
+        return [false, e]
+    }
+}
+
+export const patchGameState = async(gameName: string, data: any) => {
+    try{
+        await db
+            .update(game_state)
+            .set({
+                ...data,
+                updatedate: new Date()
+            })
+            .where(eq(game_state.game, gameName))
     }catch(e: DrizzleError | any){
         return [false, e]
     }

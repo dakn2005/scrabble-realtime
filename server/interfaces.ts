@@ -20,9 +20,9 @@ interface IGame {
 
 interface IGameStateTable {
     game: string
-    currentplayer: string
-    letterbag: string[]
-    statistics: JSON | unknown
+    currentplayer?: string | null
+    letterbag?: string[] | null
+    statistics?: string | null
     updatedate: Date
 }
 
@@ -35,10 +35,14 @@ type TLetterBag = {
     [dict_key: number]: string[]
 }
 
+type TStats = {
+    [dict_key: string]: string[]
+}
+
 enum ELangs {
     sheng = 'Sheng', 
     en = 'English',
 }
 // interface IGameSt
 
-export { IUser, IMessage, IGame,IGameStateTable, TLetterBag, ELangs }
+export { IUser, IMessage, IGame,IGameStateTable, TLetterBag, TStats, ELangs }

@@ -19,7 +19,7 @@
     games = await resp.json();
   });
 
-  const joinGame = () => {
+  const joinGame = (e) => {
     joining = true;
 
     let [gameName, gameLang] = selectedgame.split("|");
@@ -43,8 +43,9 @@
   };
 
   const newGame = async (e) => {
+    e.preventDefault();
+
     if (newuname == "" || newgamename == "") {
-      e.preventDefault();
       toast.error("Please enter a username and game name");
 
       return;

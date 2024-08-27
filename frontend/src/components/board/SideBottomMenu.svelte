@@ -9,6 +9,7 @@
 </script>
 
 <ul class="{isbottom ? 'md:invisible menu bottommenu' : 'hidden md:menu sidemenu mt-24 mb-auto'}">
+  
   <li>
     <button on:click={submit}>
       <i class="fa-solid fa-upload"></i>
@@ -26,11 +27,19 @@
   </li>
 
   <li>
-    <button on:click={
+    <!-- <button on:click={
       $socket.emit('pick_tiles')
-    }>
+    }> -->
+    <button>
       <img src="scrabble-letter-small.png" alt="letter" width="16" height="16" />
       <span>pick tiles </span>
+    </button>
+  </li>
+
+  <li>
+    <button on:click="{() => ($settingsOpen = true)}">
+      <img src="score.png" alt="letter" width="20" height="20" />
+      <span>scores </span>
     </button>
   </li>
 
@@ -42,12 +51,6 @@
     </button>
   </li>
 
-  <li>
-    <button on:click="{() => ($settingsOpen = true)}">
-      <img src="score.png" alt="letter" width="20" height="20" />
-      <span>scores </span>
-    </button>
-  </li>
   <li>
     <button on:click="{() => {
       $socket.emit("leave_game", { username, gameName: game?.name });

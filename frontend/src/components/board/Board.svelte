@@ -1,41 +1,40 @@
 <script>
-  import { onDestroy, onMount } from "svelte";
+  import { onDestroy } from "svelte";
   import { dndzone } from "svelte-dnd-action";
   import { flip } from "svelte/animate";
   import { toast } from "svelte-sonner";
   import { ulid } from "ulid";
 
+  import * as Drawer from "$lib/components/ui/drawer";
+
   import Tile from "./Tile.svelte";
   import Square from "./Square.svelte";
   import SideBottomMenu from "./SideBottomMenu.svelte";
   // import Queue from "$lib/queue.js";
-  import { socket, userStore, messages } from "$lib/stores.js";
-  
-  export let  currentPlayer;
-  export let pickedTiles = [
-    // { id: ulid(), letter: "M" },
-    // { id: ulid(), letter: "B" },
-    // { id: ulid(), letter: "O" },
-    // { id: ulid(), letter: "G" },
-    // { id: ulid(), letter: "I" },
-    // { id: ulid(), letter: "D" },
-    // { id: ulid(), letter: "I" },
-  ];
+  import { socket, userStore, messages, settingsOpen } from "$lib/stores.js";
+
+  let gamePlayers = [],
+    remainingTiles = 0;
+  let currentPlayer,
+    pickedTiles = [
+      // { id: ulid(), letter: "M" },
+      // { id: ulid(), letter: "B" },
+      // { id: ulid(), letter: "O" },
+      // { id: ulid(), letter: "G" },
+      // { id: ulid(), letter: "I" },
+      // { id: ulid(), letter: "D" },
+      // { id: ulid(), letter: "I" },
+    ];
 
   let { username, game } = $userStore;
 
   let toggleSideBar = false;
 
-  // onMount(() => {
-  //   if ($socket) {
-  //     $socket.emit("pick_tiles", { game, tiles_2_pick: 7 - pickedLetters.length });
-  //   }
-  // });
-
   onDestroy(() => {
-    pickedTiles = [];
+    if (pickedTiles.length > 0)
+      $socket.emit('return_tiles', {game, tiles: pickedTiles});
 
-    // TODO: return tiles!
+    pickedTiles = [];
   });
 
   let lettersScores = {
@@ -69,11 +68,12 @@
 
   let queue = []; //new Queue();
   let visited = new Set();
-  let newlyVisited = new Map(), newlyVisitedBroadcast = new Map();
+  let newlyVisited = new Map(),
+    newlyVisitedBroadcast = new Map();
 
   let wordMap = new Map();
   let wholeWordScores = [];
-  let proposedWordScore = 0; 
+  let proposedWordScore = 0;
   // let newlySubbmittedWord = [
   //   { id: 1, letter: "M" },
   //   { id: 2, letter: "B" },
@@ -110,12 +110,11 @@
       }
 
       queue[idx] = [id, letter, position, score];
-      
+
       newlyVisited.clear();
-      queue.forEach(q=>{
+      queue.forEach((q) => {
         newlyVisited.set(`${q[2][0]},${q[2][1]}`, q[1]);
-      })
-      
+      });
     } else {
       queue.push([id, letter, position, score]);
       newlyVisited.set(`${position[0]},${position[1]}`, letter);
@@ -135,7 +134,6 @@
 
     let colarr = [],
       rowarr = [];
-
 
     let wordidentifier = (letter, coord, rowwise, colwise) => {
       let lastcoords = thewordcoords.length > 0 ? thewordcoords.at(-1) : null;
@@ -191,7 +189,6 @@
             newRow += dr;
           }
         }
-
       }
     };
 
@@ -200,8 +197,8 @@
         return [[], [], "No word found"];
       }
     }
-  
-    if (wordMap.get('7,7') == undefined && newlyVisited.get('7,7') == undefined) {
+
+    if (wordMap.get("7,7") == undefined && newlyVisited.get("7,7") == undefined) {
       return [[], [], "Beginning of game must have a letter in the middle tile"];
     }
 
@@ -209,56 +206,55 @@
       rowarr.push(pos[0]);
       colarr.push(pos[1]);
     }
-    
+
     let rowwise = Math.max(...rowarr) - Math.min(...rowarr) == 0;
     let colwise = Math.max(...colarr) - Math.min(...colarr) == 0;
-    
+
     // further validations
     if (rowwise || colwise) {
-      let queueSort = {}
-      
+      let queueSort = {};
+
       for (let q of queue) {
-        let s = q[2][0]+q[2][1]
-        queueSort[s] = q
+        let s = q[2][0] + q[2][1];
+        queueSort[s] = q;
       }
-      
-      colarr=[]
-      rowarr=[]
-      queue = Object.values(queueSort)
 
-      console.log(queue)
+      colarr = [];
+      rowarr = [];
+      queue = Object.values(queueSort);
 
-      queue.forEach(q=>{
-        let pos = q[2]
+      console.log(queue);
+
+      queue.forEach((q) => {
+        let pos = q[2];
         rowarr.push(pos[0]);
         colarr.push(pos[1]);
-      })
-      
+      });
+
       rowarr.reduce((a, b) => {
-        let minus = Math.abs(a - b)
-        if ( minus > 1) {
+        let minus = Math.abs(a - b);
+        if (minus > 1) {
           colwise = false;
           rowwise = false;
         }
 
-        return b
+        return b;
       });
 
       colarr.reduce((a, b) => {
-        let minus = Math.abs(a - b)
+        let minus = Math.abs(a - b);
 
         if (minus > 1) {
           rowwise = false;
           colwise = false;
         }
 
-        return b
-
+        return b;
       });
     }
 
     if (rowwise || colwise) {
-      for (let [, letter, pos,] of queue) {
+      for (let [, letter, pos] of queue) {
         wordidentifier(letter, pos, rowwise, colwise);
       }
     } else {
@@ -350,12 +346,10 @@
     items: pickedTiles,
     flipDurationMs,
     morphDisabled: true,
-    // dragDisabled: true,
+    dragDisabled: currentPlayer?.toLowerCase() != username?.toLowerCase(),
   };
 
   $: if ($socket) {
-    
-
     $socket.on("words_submitted", (data) => {
       if (data.status == "broadcast") {
         data.newlyVisited.forEach((pos, l) => {
@@ -383,7 +377,30 @@
       boardGrid = boardGrid;
     });
 
-   
+    $socket.on("ingame_players", (data) => {
+      gamePlayers = data;
+      // console.log("ingame_players", data);
+    });
+
+    $socket.on("current_player", (player) => {
+      currentPlayer = player;
+      // console.log("current_player", player);
+    });
+
+    $socket.on("tiles_picked", (data) => {
+      if (pickedTiles.length == 7) return;
+
+      remainingTiles = data.remaining;
+
+      data.tiles.forEach((t) => {
+        pickedTiles.push({
+          id: ulid(),
+          letter: t,
+        });
+      });
+
+      pickedTiles = pickedTiles;
+    });
   }
 </script>
 
@@ -401,7 +418,6 @@
         {#each boardGrid as row, i}
           <div class="board-row">
             {#each row as square}
-        
               {#if newlyVisitedBroadcast.size > 0 && newlyVisitedBroadcast.has(`${i},${square.id}`)}
                 <Square row_id="{i}" tile_id="{square.id}" {getLetterScore} {proposedWordQueue} items="{[{ id: ulid(), letter: newlyVisitedBroadcast.get(`${i},${square.id}`) }]}" disabled="{currentPlayer !== username}" />
               {:else if wordMap.has(`${i}${square.id}`)}
@@ -415,7 +431,8 @@
       </div>
 
       <!-- user deck -->
-      <div class="rack" use:dndzone="{dndOptions}" on:finalize="{handleDnd}" on:consider="{handleDnd}" disabled="{currentPlayer !== username}">
+      
+      <div class="rack" use:dndzone="{dndOptions}" on:finalize="{handleDnd}" on:consider="{handleDnd}">
         {#if pickedTiles.length > 0}
           {#each pickedTiles as item (item.id)}
             <div animate:flip="{{ duration: flipDurationMs }}">
@@ -429,6 +446,58 @@
     </div>
   </div>
 </div>
+
+<Drawer.Root bind:open="{$settingsOpen}">
+  <!-- <Drawer.Trigger></Drawer.Trigger> -->
+  <Drawer.Content>
+    <Drawer.Header>
+      <!-- <Drawer.Title>Are you sure absolutely sure?</Drawer.Title>
+      <Drawer.Description>This action cannot be undone.</Drawer.Description> -->
+      <div class="w-full text-center">
+        <span class="text-md">
+          {game.name} 
+        </span>
+       
+        <span class="text-sm italic">
+          ({game.lang})
+        </span>
+      </div> 
+    </Drawer.Header>
+
+    <!-- divider here -->
+    <!-- users[scores] | tiles left | turn history |  -->
+   
+
+
+    <div class="flex flex-row w-full p-2">     
+      <div class="w-1/3 text-center">   
+        <div class="flex flex-row space-x-2">
+          {#each gamePlayers as player}
+            <span class="border-t-4 rounded w-1/2 text-sm {player.username == currentPlayer ? 'border-green-400 bg-green-300' : 'border-slate-400 bg-slate-200'}">
+              {player.username.toLowerCase() == player.username + (username.toLowerCase() ? '(you)' : '')}
+              <div class="badge">{0}</div>
+            </span>
+          {/each}
+        </div>
+
+      </div>
+
+      <div class="w-1/3 text-center">
+        <span class="text-5xl font-semibold">{remainingTiles}</span>
+        <br />
+        <span>tiles left</span>
+      </div>
+
+      <div class="w-1/3 text-center">
+        here
+      </div>
+    </div>
+
+    <Drawer.Footer>
+      <!-- <Drawer.Close>Cancel</Drawer.Close> -->
+    </Drawer.Footer>
+  </Drawer.Content>
+</Drawer.Root>
 
 <style>
   :global(body *) {

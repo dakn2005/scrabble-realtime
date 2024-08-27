@@ -10,8 +10,8 @@ import cors from 'cors';
 import 'dotenv/config';
 import fs from 'fs';
 
-import { IUser, TLetterBag, ELangs, IGameStateTable, IGame } from './interfaces'
-import { getGames, createGame, upsertGameState, getGameState } from './database/services/crud';
+import { IUser, TLetterBag, ELangs, IGameStateTable, IGame, TStats } from './interfaces'
+import { getGames, createGame, upsertGameState, patchGameState, getGameState } from './database/services/crud';
 import leaveGame from './utils/leave-game';
 import errorHandling from './utils/errorHandling';
 import Trie from './utils/tries';
@@ -35,12 +35,12 @@ let ioCorsUrl = process.env.DEBUG ? 'http://localhost:5173' : process.env.SERVER
 
 let shengTrie = new Trie()
 let enTrie = new Trie()
-let shengLetters: Set<string> = new Set();
+let shengLetters: string[] = []; //Set<string> = new Set();
 let shengLetterSetter = (wrd: string) => {
     const isAlpha = (str: string) => /^[a-zA-Z]*$/gi.test(str)
     wrd.split('').forEach((element: string) => {
         if (isAlpha(element)) {
-            shengLetters.add(element.toUpperCase())
+            shengLetters.push(element.toUpperCase())
         }
     });
 }
@@ -153,27 +153,27 @@ const initEnLetterBag = (restart?: boolean): string[] => {
     return shuffle(letterBag);
 }
 
-const getTiles = async (game: IGame, tiles_2_pick: number, incoming_gamestate?: IGameStateTable[]): Promise<string[]> => {
+const getTiles = async (game: IGame, tiles_2_pick: number, incoming_gamestate?: IGameStateTable[]) => {
     let gamestate = incoming_gamestate ?? await getGameState(game.name);
 
-    let lb: string[];
+    let lb: string[] | undefined | null;
 
     if (game.lang == ELangs.sheng)
-        lb = gamestate.length == 0 ? shuffle([...shengLetters.values()]) : gamestate[0].letterbag;
+        lb = gamestate.length == 0 ? shuffle([...shengLetters]) : gamestate[0].letterbag;
     else //if (game.lang == ELangs.en)
         lb = gamestate.length == 0 ? initEnLetterBag(true) : gamestate[0].letterbag;
 
-    let tiles: string[] = lb.splice(0, tiles_2_pick);
+    let tiles: string[] |undefined = lb?.splice(0, tiles_2_pick);
 
     await upsertGameState({
         game: game.name,
         letterbag: lb,
-        currentplayer: gamestate[0].currentplayer,
-        statistics: (gamestate[0]?.statistics ?? {}) as JSON,
+        currentplayer: gamestate[0]?.currentplayer,
+        statistics: gamestate[0]?.statistics,
         updatedate: new Date()
     });
 
-    return tiles
+    return { tiles, remaining: lb?.length }
 }
 
 io.on('connection', (socket: Socket) => {
@@ -221,22 +221,22 @@ io.on('connection', (socket: Socket) => {
         players.push({ id: socket.id, username, game: gameName });
         let gamePlayers = players.filter((user) => user?.game === gameName);
 
-        let currentPlayer;
+        //set current player
+        let currentPlayer, tiledata
 
         if (gamePlayers.length == 1) {
             currentPlayer = username
-            let tiles = await getTiles(game, 7);
-            socket.emit('tiles_picked', tiles);
-
+            tiledata = await getTiles(game, 7);
+            await patchGameState(gameName, {currentplayer: currentPlayer})
         }else{
             let gs: IGameStateTable[] = await getGameState(game.name);
-            currentPlayer = gs[0].currentplayer;
-            let tiles = await getTiles(game, 7, gs);
-            socket.emit('tiles_picked', tiles);
+            currentPlayer = gs[0]?.currentplayer;
+            tiledata = await getTiles(game, 7, gs);
         }
-
+        
         io.to(gameName).emit('ingame_players', gamePlayers);
         io.to(gameName).emit('current_player', currentPlayer);
+        socket.emit('tiles_picked', tiledata);
 
 
         // (async () => {
@@ -268,7 +268,7 @@ io.on('connection', (socket: Socket) => {
         // Remove user from memory
         players = leaveGame(socket.id, players);
         // console.log(allUsers)
-        socket.to(gameName).emit('ingame_players', { players });
+        socket.to(gameName).emit('ingame_players', players);
         socket.to(gameName).emit('receive_message', {
             username: CHAT_BOT,
             message: `${username} has left the chat`,
@@ -316,45 +316,71 @@ io.on('connection', (socket: Socket) => {
             }
         }
 
-        if (data.game.lang == ELangs.en) {
-            // if eng, use the api below
-            // https://scrabblechecker.collinsdictionary.com/check/api/index.php?key=aa&isFriendly=1&nocache=1723803287116
-            for (const word of data.words) {
-                let isword = enTrie.search(word[0]);
+        // if (data.game.lang == ELangs.en) {
+        //     // if eng, use the api below
+        //     // https://scrabblechecker.collinsdictionary.com/check/api/index.php?key=aa&isFriendly=1&nocache=1723803287116
+        //     for (const word of data.words) {
+        //         let isword = enTrie.search(word[0]);
 
-                // if (!word && data.game.use_scrabble_dictionary){
-                // TODO: mimic chrome browser to get results from this link
-                //     (async () => {
-                //         const response = await fetch('https://scrabblechecker.collinsdictionary.com/check/api/index.php?key=' + word.toLowerCase());
-                //         const status = await response.status
+        //         // if (!word && data.game.use_scrabble_dictionary){
+        //         // TODO: mimic chrome browser to get results from this link
+        //         //     (async () => {
+        //         //         const response = await fetch('https://scrabblechecker.collinsdictionary.com/check/api/index.php?key=' + word.toLowerCase());
+        //         //         const status = await response.status
 
-                //         isword = status == 200
-                //     })()
-                // }
-                if (isword)
-                    all_verified.push(isword)
+        //         //         isword = status == 200
+        //         //     })()
+        //         // }
+        //         if (isword)
+        //             all_verified.push(isword)
+        //     }
+        // }
+
+        if (!all_verified.every(v => v == true)) {            
+            // change player turn
+            let gamestate = await getGameState(data.game.name);
+            let cp = gamestate[0].currentplayer;
+            let prevIdx: number = 0;
+
+            players.forEach((p,i) => {
+                if (p.username == cp)
+                    prevIdx = i
+            });
+            let nextIdx = players.length > 1 ? (prevIdx + 1)  : 0;
+            nextIdx = nextIdx >= players.length ? 0 : nextIdx;
+
+            let nextplayer = players[nextIdx].username;
+            
+            //save gamestate to db
+            let gstateStr: string | null = gamestate[0].statistics;
+            let gstate: TStats = {}
+
+            if (gstateStr != null){
+                gstate = JSON.parse(gstateStr);
+                gstate = {
+                    [data.username]: [
+                        ...gstate[data.username],
+                        data.words
+                    ]
+                }
+            }else{
+                gstate = {
+                    [data.username]: data.words
+                }
             }
-        }
 
-        if (!all_verified.every(v => v == true)) {
+            await patchGameState(data.game.name, {
+                statistics: JSON.stringify(gstate), 
+                currentplayer: nextplayer
+            });
+
+            io.to(data.game.name).emit('current_player', nextplayer);
+
             socket.to(data.game.name).emit('words_submitted', {
                 newlyVisited: data.newlyVisited,
                 status: 'broadcast',
             });
 
-            // change player turn
-            let gamestate = await getGameState(data.game.name);
-            let previousPlayer = gamestate[0].currentplayer;
-            let prevIdx: number = 0;
-
-            players.forEach((p,i) => {
-                if (p.username == previousPlayer)
-                    prevIdx = i
-            })
-            
-            let nextIdx = players.length > 1 ? (prevIdx + 1)  : 0;
-            nextIdx = nextIdx >= players.length ? 0 : nextIdx
-            io.to(data.game.name).emit('current_player', players[nextIdx].username);
         }
 
         socket.emit('words_submitted', {
@@ -376,6 +402,23 @@ io.on('connection', (socket: Socket) => {
         let tiles = await getTiles(game, tiles_2_pick);
 
         socket.emit('tiles_picked', tiles);
+
+    });
+
+    socket.on('return_tiles', async(data) =>{
+        let gamestate = await getGameState(data.game.name);
+        let tiles = gamestate[0].letterbag;
+        if (tiles)
+            tiles = [
+                ...tiles,
+                data.tiles
+            ];
+        else
+            tiles = data.tiles;
+
+        patchGameState(data.game.name, {
+            letterbag: tiles
+        });
 
     });
 
