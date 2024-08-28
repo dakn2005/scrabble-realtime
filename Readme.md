@@ -39,13 +39,14 @@ The project includes concepts and technologies specified below
 
 ### Resources
 
-Dictionaries downloaded from:
+****
+- Swahili and Sheng
+  - [Swahili CSV](https://github.com/Kalebu/kamusi)
+  - [Swahililine dictionary](https://sw.glosbe.com/sw/sw)
+  - Other
+    - [Datascience projects](https://www.freecodecamp.org/news/african-language-datasets-for-data-science-projects/)
 
-- Swahili - https://github.com/Kalebu/kamusi
-
-        recommended online dictionary - https://sw.glosbe.com/sw/sw
-
-- Sheng -  https://kenyanmagazine.co.ke/200-sheng-words-and-their-meanings/
+- [Sheng sample corpus](https://kenyanmagazine.co.ke/200-sheng-words-and-their-meanings/)
 
 - English - Unix-based systems comes with their own english corpus -> goto /usr/share/dict
 

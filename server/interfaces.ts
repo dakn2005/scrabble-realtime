@@ -2,6 +2,7 @@ interface IUser {
     id: string;
     username: string;
     game: string;
+    score?: number;
 }
 
 interface IMessage {
@@ -26,22 +27,28 @@ interface IGameStateTable {
     updatedate: Date
 }
 
-interface IState {
-    playerDictionary: {},
+// interface IState {
+//     playerDictionary: {},
 
-}
+// }
 
 type TLetterBag = {
     [dict_key: number]: string[]
 }
 
+type TPlayerData = {
+    words: string[] //word|placememnt|score
+    timestamp: Date
+}
+
 type TStats = {
-    [dict_key: string]: string[]
+    [dict_key: string]: TPlayerData[]
 }
 
 enum ELangs {
-    sheng = 'Sheng', 
+    sheng = 'Sheng + Swahili', 
     en = 'English',
+    swa = 'Swahili'
 }
 // interface IGameSt
 

@@ -1,17 +1,35 @@
 <script>
-  import { onDestroy } from "svelte";
-  import { dndzone } from "svelte-dnd-action";
+  import { onDestroy, onMount } from "svelte";
   import { flip } from "svelte/animate";
+  import { goto } from "$app/navigation";
+  import { dndzone } from "svelte-dnd-action";
   import { toast } from "svelte-sonner";
   import { ulid } from "ulid";
-
+  // import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
   import * as Drawer from "$lib/components/ui/drawer";
 
   import Tile from "./Tile.svelte";
   import Square from "./Square.svelte";
   import SideBottomMenu from "./SideBottomMenu.svelte";
+  import ScoreChart from "./ScoreChart.svelte";
   // import Queue from "$lib/queue.js";
+
   import { socket, userStore, messages, settingsOpen } from "$lib/stores.js";
+
+  onMount(() => {
+    setTimeout(() => {
+      // console.log(currentPlayer);
+
+      if (currentPlayer == undefined) {
+        $socket.emit("leave_game", { username, gameName: game?.name });
+        $userStore = {};
+        $messages = [];
+
+        goto("/");
+      }
+      // console.log('runned')
+    }, 4000);
+  });
 
   let gamePlayers = [],
     remainingTiles = 0;
@@ -31,8 +49,7 @@
   let toggleSideBar = false;
 
   onDestroy(() => {
-    if (pickedTiles.length > 0)
-      $socket.emit('return_tiles', {game, tiles: pickedTiles});
+    if (pickedTiles.length > 0) $socket.emit("return_tiles", { game, tiles: pickedTiles });
 
     pickedTiles = [];
   });
@@ -74,6 +91,7 @@
   let wordMap = new Map();
   let wholeWordScores = [];
   let proposedWordScore = 0;
+
   // let newlySubbmittedWord = [
   //   { id: 1, letter: "M" },
   //   { id: 2, letter: "B" },
@@ -401,10 +419,21 @@
 
       pickedTiles = pickedTiles;
     });
+
+    // $socket.on("receive_message", (data) => {
+    //   $messages = [
+    //     ...$messages,
+    //     {
+    //       message: data.message,
+    //       username: data.username,
+    //       __createdtime__: data.__createdtime__,
+    //     },
+    //   ];
+    // });
   }
 </script>
 
-<div class="game-container">
+<div class="game-container game-height">
   <div class="flex {!toggleSideBar ? 'flex-row' : 'flex-row-reverse'}">
     <SideBottomMenu {setToggleSideBar} {submit} />
 
@@ -431,7 +460,7 @@
       </div>
 
       <!-- user deck -->
-      
+
       <div class="rack" use:dndzone="{dndOptions}" on:finalize="{handleDnd}" on:consider="{handleDnd}">
         {#if pickedTiles.length > 0}
           {#each pickedTiles as item (item.id)}
@@ -455,41 +484,39 @@
       <Drawer.Description>This action cannot be undone.</Drawer.Description> -->
       <div class="w-full text-center">
         <span class="text-md">
-          {game.name} 
+          {game.name}
         </span>
-       
+
         <span class="text-sm italic">
           ({game.lang})
         </span>
-      </div> 
+      </div>
     </Drawer.Header>
 
     <!-- divider here -->
     <!-- users[scores] | tiles left | turn history |  -->
-   
 
+    <div class="flex flex-col md:flex-row w-full p-6 md:p-2">
+      <div class="w-full md:w-1/3 md:text-center">
 
-    <div class="flex flex-row w-full p-2">     
-      <div class="w-1/3 text-center">   
-        <div class="flex flex-row space-x-2">
+        <div class="flex flex-row">
           {#each gamePlayers as player}
-            <span class="border-t-4 rounded w-1/2 text-sm {player.username == currentPlayer ? 'border-green-400 bg-green-300' : 'border-slate-400 bg-slate-200'}">
-              {player.username.toLowerCase() == player.username + (username.toLowerCase() ? '(you)' : '')}
+            <span class="border-t-4 rounded w-1/3 md:w-1/2 text-xs mr-3 p-1 {player.username == currentPlayer ? 'border-green-400 bg-green-300' : 'border-slate-400 bg-slate-200'}">
+              {player.username} {player.username.toLowerCase() == username.toLowerCase() ? "(you)" : ""}
               <div class="badge">{0}</div>
             </span>
           {/each}
         </div>
-
       </div>
 
-      <div class="w-1/3 text-center">
-        <span class="text-5xl font-semibold">{remainingTiles}</span>
+      <div class="w-full md:w-1/3 md:text-center">
+        <span class="text-5xl md:text-6xl font-semibold">{remainingTiles}</span>
         <br />
         <span>tiles left</span>
       </div>
 
-      <div class="w-1/3 text-center">
-        here
+      <div class="w-full md:w-1/3 md:text-center">
+        <ScoreChart />
       </div>
     </div>
 
@@ -508,12 +535,21 @@
   .game-container {
     display: flex;
     flex-direction: column;
-    height: 100%;
     background-color: #272727;
     /* background-color: #fffae8; */
     justify-content: center;
     align-items: center;
     padding-top: 20px;
+  }
+
+  .game-height {
+    height: 100%;
+  }
+
+  @media only screen and (max-width: 600px) {
+    .game-height {
+      height: 100vh;
+    }
   }
 
   .board {

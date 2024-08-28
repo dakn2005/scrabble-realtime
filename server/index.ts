@@ -8,14 +8,12 @@ import express, { Request, Response } from 'express';
 import http from 'http';
 import cors from 'cors';
 import 'dotenv/config';
-import fs from 'fs';
 
 import { IUser, TLetterBag, ELangs, IGameStateTable, IGame, TStats } from './interfaces'
 import { getGames, createGame, upsertGameState, patchGameState, getGameState } from './database/services/crud';
 import leaveGame from './utils/leave-game';
 import errorHandling from './utils/errorHandling';
-import Trie from './utils/tries';
-import shuffle from './utils/shuffle';
+import { shengTrie, engTrie, swahiliTrie, initShengLetterBag, initEnLetterBag } from './utils/tries';
 
 let app = express();
 
@@ -32,44 +30,6 @@ let ioCorsUrl = process.env.DEBUG ? 'http://localhost:5173' : process.env.SERVER
 // app.get('/rooms', (req: Request, res: Response) => {
 //     res.send({ msg: 'Hello World!' });
 // });
-
-let shengTrie = new Trie()
-let enTrie = new Trie()
-let shengLetters: string[] = []; //Set<string> = new Set();
-let shengLetterSetter = (wrd: string) => {
-    const isAlpha = (str: string) => /^[a-zA-Z]*$/gi.test(str)
-    wrd.split('').forEach((element: string) => {
-        if (isAlpha(element)) {
-            shengLetters.push(element.toUpperCase())
-        }
-    });
-}
-
-// load tries
-fs.readFileSync('./utils/dictionaries/sheng.txt', 'utf8')
-    .split('\n')
-    .forEach(line => {
-        let word = line.split('-')[0]
-        word = word.trim()
-
-        if (word.includes('/')) {
-            word.split('/').forEach(wrd => {
-                shengTrie.insert(wrd)
-                shengLetterSetter(wrd)
-            })
-        } else {
-            shengTrie.insert(word);
-            shengLetterSetter(word)
-        }
-    });
-
-fs.readFileSync('./utils/dictionaries/en.txt', 'utf8')
-    .split('\n')
-    .forEach(word => {
-        if (word.split('').length > 1) {
-            enTrie.insert(word)
-        }
-    });
 
 app.get('/', (req: Request, res: Response) => {
     res.send('Hello World!');
@@ -108,7 +68,6 @@ app.post('/api/games/add', async (req: Request, res: Response) => {
     // console.log(err)
 });
 
-
 const io = new Server(server, {
     cors: {
         origin: ioCorsUrl,
@@ -120,38 +79,7 @@ const CHAT_BOT = 'Gamebot';
 // Add this
 let players: IUser[] = []; // All users in current chat room
 
-const initEnLetterBag = (restart?: boolean): string[] => {
-    let letterBag: string[] = [];
 
-    let lettersDistribution: TLetterBag = {
-        1: ['J', 'K', 'Q', 'X', 'Z'],
-        2: ['B', 'C', 'F', 'H', 'M', 'P', 'V', 'W', 'Y'],
-        3: ['G'],
-        4: ['D', 'L', 'S', 'U'],
-        6: ['N', 'R', 'T'],
-        8: ['O'],
-        9: ['A', 'I'],
-        12: ['E'],
-    }
-
-    if (players.length == 1 || restart) {
-
-        Object.keys(lettersDistribution).forEach(key => {
-            lettersDistribution[parseInt(key)].forEach(letter => {
-                let cnter = parseInt(key)
-
-                while (cnter > 0) {
-                    letterBag.push(letter)
-                    cnter--
-                }
-            });
-        });
-
-    }
-
-    //random picking
-    return shuffle(letterBag);
-}
 
 const getTiles = async (game: IGame, tiles_2_pick: number, incoming_gamestate?: IGameStateTable[]) => {
     let gamestate = incoming_gamestate ?? await getGameState(game.name);
@@ -159,9 +87,9 @@ const getTiles = async (game: IGame, tiles_2_pick: number, incoming_gamestate?: 
     let lb: string[] | undefined | null;
 
     if (game.lang == ELangs.sheng)
-        lb = gamestate.length == 0 ? shuffle([...shengLetters]) : gamestate[0].letterbag;
+        lb = gamestate.length == 0 ? initShengLetterBag() : gamestate[0].letterbag;
     else //if (game.lang == ELangs.en)
-        lb = gamestate.length == 0 ? initEnLetterBag(true) : gamestate[0].letterbag;
+        lb = gamestate.length == 0 ? initEnLetterBag() : gamestate[0].letterbag;
 
     let tiles: string[] |undefined = lb?.splice(0, tiles_2_pick);
 
@@ -235,6 +163,7 @@ io.on('connection', (socket: Socket) => {
         }
         
         io.to(gameName).emit('ingame_players', gamePlayers);
+        console.log(currentPlayer)
         io.to(gameName).emit('current_player', currentPlayer);
         socket.emit('tiles_picked', tiledata);
 
@@ -289,7 +218,6 @@ io.on('connection', (socket: Socket) => {
         }
     });
 
-
     socket.on('submit_words', async (data) => {
         // TODO: check for word validity
         // TODO: ensure words are represent in correct format from frontend - deprecate suffix tree
@@ -302,9 +230,13 @@ io.on('connection', (socket: Socket) => {
             for (const word of data.words) {
                 let isword = shengTrie.search(word[0]);
 
+                if (!isword){
+                    isword = swahiliTrie.search(word[0]);
+                }
+
                 if (!isword) {
                     // (async () => {
-                    const response = await fetch('https://lughayangu.com/' + word[0].toLowerCase());
+                    const response = await fetch('https://lughayangu.com/sheng/' + word[0].toLowerCase());
                     const status = await response.status
 
                     isword = status == 200
@@ -360,12 +292,20 @@ io.on('connection', (socket: Socket) => {
                 gstate = {
                     [data.username]: [
                         ...gstate[data.username],
-                        data.words
+                        {
+                            timestamp: new Date(),
+                            words: data.words
+                        }
                     ]
                 }
             }else{
                 gstate = {
-                    [data.username]: data.words
+                    [data.username]: [
+                        {
+                            timestamp: new Date(),
+                            words: data.words
+                        }
+                    ]
                 }
             }
 
@@ -407,7 +347,7 @@ io.on('connection', (socket: Socket) => {
 
     socket.on('return_tiles', async(data) =>{
         let gamestate = await getGameState(data.game.name);
-        let tiles = gamestate[0].letterbag;
+        let tiles = gamestate[0]?.letterbag;
         if (tiles)
             tiles = [
                 ...tiles,
@@ -416,7 +356,7 @@ io.on('connection', (socket: Socket) => {
         else
             tiles = data.tiles;
 
-        patchGameState(data.game.name, {
+        await patchGameState(data.game.name, {
             letterbag: tiles
         });
 

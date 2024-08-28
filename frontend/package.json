@@ -49,8 +49,10 @@
 	"types": "./dist/index.d.ts",
 	"type": "module",
 	"dependencies": {
+		"@highcharts/svelte": "^1.1.0",
 		"bits-ui": "^0.21.13",
 		"clsx": "^2.1.1",
+		"highcharts": "^11.4.7",
 		"mode-watcher": "^0.4.1",
 		"socket.io-client": "^4.7.5",
 		"svelte-dnd-action": "^0.9.49",

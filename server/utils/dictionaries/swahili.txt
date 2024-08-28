@@ -5,14 +5,14 @@ aalimu
 aathari
 aazi
 aazi
-abaa!
+abaa
 abadani
 abadi
 abakusi
 abdi
 abedari
 abedari
-abee!
+abee
 abiri
 abiri
 abiri
@@ -30,15 +30,15 @@ abunusi
 abunuwasi
 aburani
 abuwabu
-abwe!
+abwe
 abyadhi
 abyadhi
 acha
-acha!
+acha
 achama
 achana
 achari
-ache!
+ache
 achia
 achika
 achisha
@@ -85,9 +85,9 @@ adui
 advansi
 afa
 afadhali
-afanalek!
+afanalek
 afande
-afande!
+afande
 afazia
 afiki
 afikiana
@@ -106,7 +106,7 @@ afueni
 afwaji
 afya
 afya
-afya!
+afya
 afyuni
 aga
 agaa
@@ -125,8 +125,8 @@ agronomia
 agua
 aguzi
 AH
-ah!
-ahaa!
+ah
+ahaa
 ahadharu
 ahadi
 ahadi
@@ -140,7 +140,7 @@ ahidi
 ahiri
 ahirika
 ahirisha
-ahsante!
+ahsante
 ahueni
 aibika
 aibisha
@@ -150,12 +150,12 @@ aidini
 aila
 aili
 aili
-aimi!
+aimi
 aina
 aini
 ainisha
 airisi
-aisee!
+aisee
 aisikirimu
 ajaa
 ajabia
@@ -189,8 +189,8 @@ ajuadi
 ajuza
 ajwari
 aka
-aka!
-aka!
+aka
+aka
 akademia
 akali
 akania
@@ -232,8 +232,8 @@ akwami
 ala
 ala ala
 ala ya sauti
-ala!
-ala!
+ala
+ala
 alaa
 alaa
 alaka
@@ -283,7 +283,7 @@ aljebra
 alkemia
 Allah
 Allah Allah
-Allahuma!
+Allahuma
 almanusura
 almari
 almaria
@@ -302,7 +302,7 @@ alwaridi
 alwatani
 ama
 ama
-ama!
+ama
 amaa
 amagedoni
 amali
@@ -352,7 +352,7 @@ amikto
 amili
 amili
 amilifu
-Amin!
+Amin
 amini
 amini
 aminika
@@ -397,7 +397,7 @@ andamana
 andamizi
 andasa
 andazi
-andek!
+andek
 andika
 andika
 andishi
@@ -558,7 +558,7 @@ atamia
 ateri
 athari
 athiri
-ati!
+ati
 atia
 atiati
 atibu
@@ -918,7 +918,7 @@ bebwa
 bedeni
 bedua
 bedui
-bee!
+bee
 bega
 begi
 behedani
@@ -926,7 +926,7 @@ behewa
 behewa
 bei
 beji
-beka!
+beka
 beki
 beku
 bekua
@@ -1015,14 +1015,14 @@ bikiri
 bikizee
 bila
 biladi
-bilahi!
+bilahi
 bilashi
 bilauri
 bilda
 bildi
 bili
 biliadi
-bilikuli!
+bilikuli
 bilioni
 biliuli
 biliwili
@@ -1076,8 +1076,8 @@ bisho
 bisi
 bisibisi
 biskuti
-bismillahi!
-bismillahi!
+bismillahi
+bismillahi
 bitana
 biti
 bitimarembo
@@ -1205,7 +1205,7 @@ bronki
 brosha
 bruchi
 bruda
-bu!
+bu
 bua
 bua
 bua
@@ -1348,7 +1348,7 @@ butua
 butua
 butwaa
 buu
-buu!
+buu
 buuwambe
 buye
 buyu
@@ -1367,7 +1367,7 @@ bwambwara
 bwamdogo
 bwamkubwa
 bwana
-bwana!
+bwana
 bwanaharusi
 bwanashamba
 bwanga
@@ -1788,7 +1788,7 @@ chirwa
 chizi
 chizi
 cho
-cho!
+cho
 choa
 choa
 chobea
@@ -1965,7 +1965,7 @@ chuo
 chuo
 chuo
 chuo
-chup!
+chup
 chupa
 chupa
 chupa
@@ -2318,7 +2318,7 @@ diwani
 diwani
 dizeli
 dizi
-do!
+do
 doa
 dobi
 doboa
@@ -2489,13 +2489,13 @@ duwaza
 duwazi
 duwi
 duzi
-ebo!
-ebu!
+ebo
+ebu
 eda
 edaha
 Edeni
 edita
-ee!
+ee
 egama
 egema
 egemea
@@ -2503,8 +2503,8 @@ egemeo
 egemeza
 egesha
 egesho
-ehaa!
-ehee!
+ehaa
+ehee
 ehua
 eka
 ekari
@@ -2578,10 +2578,10 @@ enga
 engaenga
 engaenga
 engua
-enhee!
+enhee
 ensaiklopidia
 entomolojia
-enyi!
+enyi
 enza
 enzi
 enzi
@@ -2595,7 +2595,7 @@ epua
 epuka
 epukana
 epusha
-epuu!
+epuu
 erevuka
 erevusha
 erio au erieli
@@ -2607,14 +2607,14 @@ etha
 ethili
 ethnografia
 ethnolojia
-eti!
+eti
 etimolojia
 etuka
 eua
 eutenasia
-ewaa!
-ewe!
-ewe!
+ewaa
+ewe
+ewe
 ezeka
 ezeka
 ezi
@@ -2915,7 +2915,7 @@ fresko
 friji
 frikiki
 friza
-fu!
+fu
 fua
 fua
 fuadi
@@ -3132,7 +3132,7 @@ fuwawe
 fuwele
 fuzi
 fuzu
-fya!
+fya
 fyanda
 fyata
 fyata
@@ -3152,7 +3152,7 @@ fyonya
 fyonza
 fyosa
 fyosi
-fyoto!
+fyoto
 fyotoa
 fyoza
 fyua
@@ -3590,14 +3590,14 @@ gwenya
 gwia
 gwiji
 gwiji
-ha!
+ha
 haba
 haba
 hababi
 habari
 habasoda
-habedari!
-habi!
+habedari
+habi
 habithi
 habta
 hadaa
@@ -3623,7 +3623,7 @@ hadimu
 hadithi
 hadithia
 hadubini
-hae!
+hae
 hafidhi
 hafifisha
 hafifisho
@@ -3645,11 +3645,11 @@ haidreti
 haidroliki
 haihai
 haijambo
-haika!
+haika
 haikamishna
 hailigwa
 haima
-hainehaine!
+hainehaine
 haini
 haini
 haipotenyusi
@@ -3681,11 +3681,11 @@ halahala
 halaiki
 halali
 halalisha
-halambe!
+halambe
 halani
 halasa
 halbadiri
-haleluya!
+haleluya
 halfiya
 hali
 hali
@@ -3707,16 +3707,16 @@ halisi
 haliudi
 halkumu
 halmashauri
-halo!
+halo
 halua
 halula
 haluli
-halumbe!
+halumbe
 halwaridi
-halwoho!
+halwoho
 halzeti
 hama
-hamadi!
+hamadi
 hamaki
 hamaki
 hamali
@@ -3743,7 +3743,7 @@ hamisha
 hamishika
 hamna
 hamna
-hamna!
+hamna
 hamnazo
 hamrawi
 hamrere
@@ -3798,7 +3798,7 @@ haraka
 harakati
 harakisha
 haram
-harambee!
+harambee
 haramia
 haramisha
 haramu
@@ -3813,8 +3813,8 @@ harija
 hariji
 harimu
 harimuni
-hario!
-harioe!
+hario
+harioe
 hariri
 hariri
 harisha
@@ -3831,8 +3831,8 @@ hasaisi
 hasama
 hasanati
 hasara
-hasha!
-hashakum!
+hasha
+hashakum
 hashashi
 hashiri
 hashiri
@@ -3884,7 +3884,7 @@ hawilisho
 hawinde
 haya
 haya
-haya!
+haya
 hayati
 hayawani
 hayo
@@ -3893,10 +3893,10 @@ hazahaza
 hazama
 hazina
 hazini
-he!
-hebo!
+he
+hebo
 hebu
-hebu!
+hebu
 hedashara
 hedhi
 hejimonia
@@ -3905,10 +3905,10 @@ hekalu
 hekaya
 hekemua
 hekima
-heko!
+heko
 hekta
 hela
-hela!
+hela
 heleleza
 helikopta
 helmeti
@@ -3926,7 +3926,7 @@ hepa
 hereni
 heri
 heria
-heria!
+heria
 hero
 heroe
 heroini
@@ -3939,8 +3939,8 @@ heshimu
 hesi
 heti
 hewa
-hewaa!
-hewala!
+hewaa
+hewala
 heza
 hezi
 hiana
@@ -3970,7 +3970,7 @@ hiliki
 hilo
 hima
 himahima
-himahima!
+himahima
 himaya
 himidi
 himidi
@@ -4013,19 +4013,19 @@ hivi
 hivi
 hivyo
 hivyo
-hivyo!
+hivyo
 hiyo
 hizaya
 hizi
 hizi
 hizo
-hobe!
+hobe
 hobelahobela
 hodari
 hodhi
 hodhi
 hodhi
-hodi!
+hodi
 hodiya
 hofu
 hofu
@@ -4041,7 +4041,7 @@ hoka
 hoki
 hoko
 holela
-holwaho!
+holwaho
 homa
 homanyongo
 hombo
@@ -4056,7 +4056,7 @@ hondohondo
 honga
 hongea
 hongera
-hongera!
+hongera
 hongeza
 hongo
 hongwe
@@ -4114,7 +4114,7 @@ huntha
 hunudi
 huo
 hurafa
-huree!
+huree
 huria
 huru
 hurulaini
@@ -4241,10 +4241,10 @@ injini
 injinia
 inkishafi
 inna
-innalillahi!
+innalillahi
 insafu
 insha
-inshallah!
+inshallah
 insi
 inspekta
 insulini
@@ -4355,7 +4355,7 @@ jamaa
 jamala
 jamali
 jamanda
-jamani!
+jamani
 Jamati
 jamba
 jambakoti
@@ -4364,7 +4364,7 @@ jambeni
 jambia
 jambika
 jambo
-jambwe!
+jambwe
 jamdani
 jamhuri
 jamia
@@ -4430,7 +4430,7 @@ jazibisha
 jazila
 jazo
 jazua
-je!
+je
 jebu
 jedhamu
 jedwali
@@ -4722,7 +4722,7 @@ juzi
 juzijuzi
 juzu
 juzuu
-ka!
+ka
 kaa
 kaa
 kaa
@@ -4769,7 +4769,7 @@ kaburu
 kabwela
 kabwiri
 kacha
-kacha!
+kacha
 kachara
 kachero
 kachira
@@ -4922,7 +4922,7 @@ kambarau
 kambare
 kambaremamba
 kambi
-kambirani!
+kambirani
 kambisi
 kambo
 kambu
@@ -4948,7 +4948,7 @@ kamsa
 kamua
 kamukunji
 kamusi
-kamwe!
+kamwe
 kana
 kana
 kana
@@ -5075,7 +5075,7 @@ karibia
 karibiana
 karibisha
 karibu
-karibu!
+karibu
 karibuni
 karidhi
 kariha
@@ -5220,16 +5220,16 @@ kazana
 kazi
 kazi
 kazia
-keba!
+keba
 kebehi
 kebehi
 kebo
-keche!
+keche
 kecheka
 kechekeche
 kedi
 keekee
-kefle!
+kefle
 kefu
 kefya
 kejekeje
@@ -6980,7 +6980,7 @@ kulia
 kulihali
 kuliko
 kuliko
-kulikoni!
+kulikoni
 kulula
 kulula
 kulungu
@@ -6992,7 +6992,7 @@ kumbakumba
 kumbakumba
 kumbana
 kumbatia
-kumbe!
+kumbe
 kumbesa
 kumbi
 kumbi
@@ -7041,7 +7041,7 @@ kunjamana
 kunjika
 kunjua
 kunjufu
-kunradhi!
+kunradhi
 kuntu
 kununu
 kunusi
@@ -7131,7 +7131,7 @@ kwaa
 kwabuka
 kwacha
 kwache
-kwaheri!
+kwaheri
 kwajuka
 kwakwa
 kwale
@@ -7187,13 +7187,13 @@ kwina
 kwinini
 kwiru
 la
-la!
+la
 laana
 laani
 laanifu
 laazizi
 labda
-labeka!
+labeka
 labibu
 labizi
 labua
@@ -7204,7 +7204,7 @@ laghai
 laghai
 lahaja
 lahani
-lahaula!
+lahaula
 lahiki
 lahiki
 laiki
@@ -7383,7 +7383,7 @@ liwato
 liwaza
 liza
 lizi
-lo!
+lo
 loa
 lodi
 lodi
@@ -7891,7 +7891,7 @@ mara
 mara
 maradhi
 maradufu
-marahaba!
+marahaba
 maramba
 maranda
 marara
@@ -7942,7 +7942,7 @@ masahihisho
 masaibu
 masakasaka
 masala
-masalale!
+masalale
 masalia
 masalkheri
 masalo
@@ -8114,9 +8114,9 @@ mawanda
 mawano
 mawasiliano
 mawazo
-mawe!
+mawe
 mawele
-mawele!
+mawele
 mawenge
 mawese
 mawewa
@@ -8191,7 +8191,7 @@ mbawala
 mbawazi
 mbayaya
 mbayuwayu
-mbe!
+mbe
 mbega
 mbega
 mbege
@@ -9637,7 +9637,7 @@ msala
 msala
 msalaba
 msaliti
-msalkheri!
+msalkheri
 msamaha
 Msamaria
 msamba
@@ -10352,7 +10352,7 @@ mwanagenzi
 mwanahabari
 mwanahalali
 mwanaharamu
-mwanaharashi!
+mwanaharashi
 mwanahewa
 mwanaisimu
 mwanajamii
@@ -10647,7 +10647,7 @@ mzuza
 mzuzu
 na
 na
-naam!
+naam
 nabihi
 nabihi
 nabii
@@ -10695,7 +10695,7 @@ nakisi
 nakshi
 nakshi
 namba
-nambo!
+nambo
 namna
 namu
 namua
@@ -10769,7 +10769,7 @@ ndigana
 ndimu
 ndiva
 ndiwe
-ndiyo!
+ndiyo
 ndizi
 ndoa
 ndoana
@@ -10890,7 +10890,7 @@ ngiri
 ngisha
 ngisi
 ngizi
-ng'o!
+ng'o
 ngoa
 ng'oa
 ngoe
@@ -11002,7 +11002,7 @@ njiti
 njiti
 njiwa
 njongwanjongwa
-njoo!
+njoo
 njorinjori
 njozi
 njuga
@@ -11245,7 +11245,7 @@ nyonyoka
 nyonyora
 nyonyota
 nyonyota
-nyoo!
+nyoo
 nyooka
 nyoosha
 nyopoa
@@ -11304,7 +11304,7 @@ oanisha
 oda
 ofisa
 ofisi
-ofwe!
+ofwe
 oga
 oga
 ogelea
@@ -11312,7 +11312,7 @@ ogesha
 ogofya
 ogopa
 ogopesha
-ohaa!
+ohaa
 oili
 oka
 okoa
@@ -11324,7 +11324,7 @@ oksijeni
 Oktoba
 ola
 ola
-ole!
+ole
 Olimpiki
 omba
 ombaomba
@@ -11398,7 +11398,7 @@ ovyo
 ovyoovyo
 oya
 oya
-oyee!
+oyee
 oza
 ozi
 ozoni
@@ -11440,7 +11440,7 @@ pakanga
 pakanga
 pakasa
 pakata
-pakawa!
+pakawa
 pakaza
 pakazia
 pake
@@ -11637,7 +11637,7 @@ pau
 pau
 paua
 pauka
-paukwa!
+paukwa
 pauni
 paya
 payapaya
@@ -11853,7 +11853,7 @@ plasta
 plastiki
 plau
 ploti
-po!
+po
 poa
 pochi
 pochi
@@ -11875,7 +11875,7 @@ pojo
 poka
 pokea
 pokezana
-poko!
+poko
 pokonya
 pokonyoka
 pokonywa
@@ -11962,7 +11962,7 @@ propela
 Protestanti
 protini
 protokali
-pu!
+pu
 pua
 pua
 pua
@@ -11972,7 +11972,7 @@ pufya
 pugi
 puju
 pujua
-pukachaka!
+pukachaka
 puku
 pukuchua
 pukupuku
@@ -12077,7 +12077,7 @@ pweke
 pweke
 pwelea
 pweta
-pwete!
+pwete
 pweteka
 pwetepwete
 pwewa
@@ -12148,7 +12148,7 @@ rangaito
 rangi
 rapa
 rapa
-rapu!
+rapu
 rarua
 raruka
 rasharasha
@@ -12257,7 +12257,7 @@ ripoti
 ripoti
 ripu
 ripu
-ripuripu!
+ripuripu
 risala
 risasi
 risasi
@@ -12358,14 +12358,14 @@ ruzuku
 ruzuku
 ruzuna
 saa
-saa!
+saa
 saada
 saba
 sababisha
 sababu
 sabahi
 sabaia
-sabalkheri!
+sabalkheri
 sabasaba
 sabasi
 sabatashara
@@ -12384,7 +12384,7 @@ saburi
 sachi
 sachi
 sadaka
-sadakta!
+sadakta
 sadaruki
 sadfa
 sadifu
@@ -12461,7 +12461,7 @@ sakramenti
 saksafoni
 sakubimbi
 sala
-salaalaa!
+salaalaa
 salaam aleikum
 saladi
 salama
@@ -12658,7 +12658,7 @@ seti
 setiri
 setla
 seua
-seuze!
+seuze
 seyyid
 seza
 shaa
@@ -12668,7 +12668,7 @@ shaba
 shababi
 shabaha
 shabaki
-shabashi!
+shabashi
 shabihi
 shabihiana
 shabiki
@@ -13450,7 +13450,7 @@ tadaraki
 tadbiri
 tadi
 tadi
-tafadhali!
+tafadhali
 tafadhalisha
 tafakari
 tafakuri
@@ -13494,13 +13494,13 @@ tahiri
 tahiyatu
 tai
 tai
-taibu!
+taibu
 taifa
 taifisha
 taifodi
 taipu
 taipureta
-taire!
+taire
 tairi
 taiti
 taja
@@ -13928,7 +13928,7 @@ thieta
 thiolojia
 thori
 thubutu
-thubutu!
+thubutu
 thumni
 thurea
 ti
@@ -14022,7 +14022,7 @@ tititi
 tiva
 toa
 toasi
-toba!
+toba
 tobo
 toboa
 toboka
@@ -14298,7 +14298,7 @@ tuza
 tuzo
 tuzua
 twaa
-twaibu!
+twaibu
 twalia
 twanga
 twaza
@@ -15623,7 +15623,7 @@ ustahamilivu
 ustahiki
 ustawi
 ustawishaji
-usu!
+usu
 usubi
 usubi
 usubu
@@ -16188,7 +16188,7 @@ walia
 walii
 walio
 walio
-wallahi!
+wallahi
 wamba
 wamba
 wamba
@@ -16257,7 +16257,7 @@ waziri
 waziwazi
 wazo
 wazua
-wee!
+wee
 wehu
 wehua
 weka
@@ -16351,7 +16351,7 @@ yabisi
 yabisika
 yadi
 yahe
-Yahom!
+Yahom
 yai
 yake
 yakhe
@@ -16373,7 +16373,7 @@ yangu
 yao
 yapi
 yapi
-Yarabi!
+Yarabi
 Yasini
 yasmini
 yatima
@@ -16483,7 +16483,7 @@ zigizaga
 zigizaga
 zigo
 zihi
-zii!
+zii
 zika
 ziki
 zikua
