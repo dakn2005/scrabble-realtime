@@ -7,28 +7,38 @@
   import { ulid } from "ulid";
   // import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
   import * as Drawer from "$lib/components/ui/drawer";
+  import { throttle } from "lodash-es";
 
   import Tile from "./Tile.svelte";
   import Square from "./Square.svelte";
   import SideBottomMenu from "./SideBottomMenu.svelte";
   import ScoreChart from "./ScoreChart.svelte";
+  import FloatingBtn from "./FloatingBtn.svelte";
   // import Queue from "$lib/queue.js";
 
   import { socket, userStore, messages, settingsOpen } from "$lib/stores.js";
 
   onMount(() => {
     setTimeout(() => {
-      // console.log(currentPlayer);
+      console.log(currentPlayer);
 
       if (currentPlayer == undefined) {
-        $socket.emit("leave_game", { username, gameName: game?.name });
-        $userStore = {};
-        $messages = [];
+        toast.warning("Couldn't communicate with the server");
+        setTimeout(() => {
+          $socket.emit("leave_game", { username, gameName: game?.name });
+          $userStore = {};
+          $messages = [];
 
-        goto("/");
+          goto("/");
+        }, 2000);
       }
-      // console.log('runned')
-    }, 4000);
+    }, 2000);
+  });
+
+  onDestroy(() => {
+    if (pickedTiles.length > 0) $socket.emit("return_tiles", { game, tiles: pickedTiles });
+
+    pickedTiles = [];
   });
 
   let gamePlayers = [],
@@ -48,12 +58,6 @@
 
   let toggleSideBar = false;
 
-  onDestroy(() => {
-    if (pickedTiles.length > 0) $socket.emit("return_tiles", { game, tiles: pickedTiles });
-
-    pickedTiles = [];
-  });
-
   let lettersScores = {
     1: ["A", "E", "I", "O", "U", "L", "N", "S", "T", "R"],
     2: ["D", "G"],
@@ -71,6 +75,26 @@
     [-1, 0],
   ];
 
+  let queue = []; //new Queue();
+  let visited = new Set();
+
+  let newlyVisited = new Map(), newlyVisitedBroadcast = new Map();
+  let wordMap = new Map();
+  let wholeWordScores = [];
+  let proposedWordScore = 0;
+  let playerWordSubmittedStatusCss = '';
+
+  // let newlySubbmittedWord = [
+  //   { id: 1, letter: "M" },
+  //   { id: 2, letter: "B" },
+  //   { id: 3, letter: "O" },
+  // ];
+  const setToggleSideBar = () => (toggleSideBar = !toggleSideBar);
+
+  let boardGrid = Array.from({ length: 15 }, (_, i) => Array.from({ length: 15 }, (_, j) => ({ id: j })));
+
+  const flipDurationMs = 300;
+
   function getLetterScore(letter) {
     for (const [key, value] of Object.entries(lettersScores)) {
       if (value.includes(letter)) {
@@ -82,21 +106,6 @@
   function handleDnd(e) {
     pickedTiles = e.detail.items;
   }
-
-  let queue = []; //new Queue();
-  let visited = new Set();
-  let newlyVisited = new Map(),
-    newlyVisitedBroadcast = new Map();
-
-  let wordMap = new Map();
-  let wholeWordScores = [];
-  let proposedWordScore = 0;
-
-  // let newlySubbmittedWord = [
-  //   { id: 1, letter: "M" },
-  //   { id: 2, letter: "B" },
-  //   { id: 3, letter: "O" },
-  // ];
 
   function proposedWordQueue(id, letter, position, score) {
     let calcScore = () => {
@@ -137,6 +146,8 @@
       queue.push([id, letter, position, score]);
       newlyVisited.set(`${position[0]},${position[1]}`, letter);
     }
+
+    playerWordSubmittedStatusCss = "";
 
     $socket.emit("player_playing", {
       nv: Object.fromEntries(newlyVisited),
@@ -241,7 +252,7 @@
       rowarr = [];
       queue = Object.values(queueSort);
 
-      console.log(queue);
+      // console.log(queue);
 
       queue.forEach((q) => {
         let pos = q[2];
@@ -297,8 +308,9 @@
 
     let words = [[proposedWord, proposedWordCoords, proposedWordScore]];
 
-    while (queue.length > 0) {
-      let [, letter, pos] = queue.shift();
+    // while (queue.length > 0) {
+    for (let qelem of queue) {
+      let [, letter, pos] = qelem; //queue.shift();
 
       // wordMap.set(`${pos[0]},${pos[1]}`, letter);
 
@@ -334,16 +346,10 @@
       if (derivedWord.length > 1) words.push([derivedWord.join(""), derivedWordCoords, score]);
     }
 
-    console.log({ words, userdetails: $userStore });
+    // console.log({ words, userdetails: $userStore });
 
-    // $socket.emit("submit_words", { username, game, words, newlyVisited });
+    $socket.emit("submit_words", { username, game, words, nv: Object.fromEntries(newlyVisited) });
   }
-
-  const setToggleSideBar = () => (toggleSideBar = !toggleSideBar);
-
-  let boardGrid = Array.from({ length: 15 }, (_, i) => Array.from({ length: 15 }, (_, j) => ({ id: j })));
-
-  const flipDurationMs = 300;
 
   $: if (pickedTiles) {
     // check whether id is in both pickedletters and queue, delete if so
@@ -367,19 +373,33 @@
     dragDisabled: currentPlayer?.toLowerCase() != username?.toLowerCase(),
   };
 
+  // $: console.log($socket)
+
   $: if ($socket) {
     $socket.on("words_submitted", (data) => {
+      throttle(() => {
+        console.log(data);
+      }, 1000);
+
       if (data.status == "broadcast") {
-        data.newlyVisited.forEach((pos, l) => {
+        Object.entries(data.nv).forEach((nv) => {
+          let [pos, l] = nv;
           wordMap.set(pos, l);
         });
+
+        newlyVisitedBroadcast.clear();
       } else {
         if (data.status == "fiti") {
-          newlyVisited.clear();
+          newlyVisited.forEach((v, k) => {
+            wordMap.set(k, v);
+          });
+          
           queue = [];
-        } else if (data.status == "chorea") {
+          visited.clear();
           newlyVisited.clear();
         }
+
+        playerWordSubmittedStatusCss = data.status;
       }
     });
 
@@ -402,7 +422,7 @@
 
     $socket.on("current_player", (player) => {
       currentPlayer = player;
-      // console.log("current_player", player);
+      console.log("current player", player);
     });
 
     $socket.on("tiles_picked", (data) => {
@@ -418,6 +438,21 @@
       });
 
       pickedTiles = pickedTiles;
+    });
+
+    $socket.on("receive_message", (data) => {
+      // throttle(() => {
+        $messages = [
+          ...$messages,
+          {
+            message: data.message,
+            username: data.username,
+            __createdtime__: data.__createdtime__,
+          },
+        ];
+
+        if (document.getElementById("chats-container")) document.getElementById("chats-container").scrollTop = document.getElementById("chats-container")?.scrollHeight;
+      // }, 1000);
     });
 
     // $socket.on("receive_message", (data) => {
@@ -448,9 +483,24 @@
           <div class="board-row">
             {#each row as square}
               {#if newlyVisitedBroadcast.size > 0 && newlyVisitedBroadcast.has(`${i},${square.id}`)}
-                <Square row_id="{i}" tile_id="{square.id}" {getLetterScore} {proposedWordQueue} items="{[{ id: ulid(), letter: newlyVisitedBroadcast.get(`${i},${square.id}`) }]}" disabled="{currentPlayer !== username}" />
+                <Square 
+                  row_id="{i}" 
+                  tile_id="{square.id}" 
+                  {getLetterScore} 
+                  {proposedWordQueue} 
+                  items="{[{ id: ulid(), letter: newlyVisitedBroadcast.get(`${i},${square.id}`) }]}" 
+                  disabled="{currentPlayer !== username}" 
+                />
               {:else if wordMap.has(`${i}${square.id}`)}
-                <Square row_id="{i}" tile_id="{square.id}" {getLetterScore} {proposedWordQueue} items="{[{ id: ulid(), letter: wordMap.get(`${i},${square.id}`) }]}" disabled="{true}" />
+                <Square 
+                  row_id="{i}" 
+                  tile_id="{square.id}" 
+                  {getLetterScore} 
+                  {proposedWordQueue} 
+                  items="{[{ id: ulid(), letter: wordMap.get(`${i},${square.id}`) }]}" 
+                  disabled="{true}" 
+                  {playerWordSubmittedStatusCss}
+                />
               {:else}
                 <Square row_id="{i}" tile_id="{square.id}" {getLetterScore} {proposedWordQueue} />
               {/if}
@@ -476,6 +526,8 @@
   </div>
 </div>
 
+<FloatingBtn />
+
 <Drawer.Root bind:open="{$settingsOpen}">
   <!-- <Drawer.Trigger></Drawer.Trigger> -->
   <Drawer.Content>
@@ -497,25 +549,25 @@
     <!-- users[scores] | tiles left | turn history |  -->
 
     <div class="flex flex-col md:flex-row w-full p-6 md:p-2">
-      <div class="w-full md:w-1/3 md:text-center">
 
+      <div class="w-full md:w-1/3 text-center mb-4 md:mb-0">
         <div class="flex flex-row">
           {#each gamePlayers as player}
-            <span class="border-t-4 rounded w-1/3 md:w-1/2 text-xs mr-3 p-1 {player.username == currentPlayer ? 'border-green-400 bg-green-300' : 'border-slate-400 bg-slate-200'}">
-              {player.username} {player.username.toLowerCase() == username.toLowerCase() ? "(you)" : ""}
+            <span class="border-t-4 rounded w-1/2 text-xs mr-3 p-1 {player.username == currentPlayer ? 'border-green-400 bg-green-300' : 'border-slate-400 bg-slate-200'}">
+              {player.username}
+              {player.username.toLowerCase() == username.toLowerCase() ? "(you)" : ""}
               <div class="badge">{0}</div>
             </span>
           {/each}
         </div>
       </div>
 
-      <div class="w-full md:w-1/3 md:text-center">
+      <div class="w-full md:w-1/3 text-center md:flex-col flex-row mb-4 md:mb-0">
         <span class="text-5xl md:text-6xl font-semibold">{remainingTiles}</span>
-        <br />
         <span>tiles left</span>
       </div>
 
-      <div class="w-full md:w-1/3 md:text-center">
+      <div class="w-full md:w-1/3 text-center mb-4 md:mb-0">
         <ScoreChart />
       </div>
     </div>

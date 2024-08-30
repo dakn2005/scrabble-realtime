@@ -1,8 +1,8 @@
 <script>
-  export let id, letter, score;
+  export let id, letter, score, playerWordSubmittedStatusCss;
 </script>
 
-<div class="square">
+<div class="square {playerWordSubmittedStatusCss}">
   <div class="letter-space no-select">
     <span class="text-2xl">{letter.toUpperCase()}</span><sub class="text-xs">{score}</sub>
   </div>

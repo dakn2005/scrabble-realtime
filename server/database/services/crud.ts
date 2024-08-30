@@ -46,7 +46,7 @@ export const upsertGameState = async(data: IGameStateTable) => {
         await db
             .insert(game_state)
             .values({
-                game: data.game,
+                game: data.game.charAt(0).toUpperCase() + data.game.slice(1),
                 currentplayer: data.currentplayer,
                 letterbag: data.letterbag,
                 statistics: data.statistics,

@@ -10,21 +10,23 @@
     if (document.getElementById("chats-container"))
       document.getElementById("chats-container").scrollTop = document.getElementById("chats-container")?.scrollHeight;
   });
-  
-  $socket.on("receive_message", (data) => {
 
-    $messages = [
-      ...$messages,
-      {
-        message: data.message,
-        username: data.username,
-        __createdtime__: data.__createdtime__,
-      },
-    ];
-    
-    if (document.getElementById("chats-container")) 
-      document.getElementById("chats-container").scrollTop = document.getElementById("chats-container")?.scrollHeight;
-  });
+  // $: if ($socket){
+  //   $socket.on("receive_message", (data) => {  
+  //     $messages = [
+  //       ...$messages,
+  //       {
+  //         message: data.message,
+  //         username: data.username,
+  //         __createdtime__: data.__createdtime__,
+  //       },
+  //     ];
+      
+  //     if (document.getElementById("chats-container")) 
+  //       document.getElementById("chats-container").scrollTop = document.getElementById("chats-container")?.scrollHeight;
+  //   });
+  // }
+  
 
   // $socket.on("all_msgs", (allMsgs) => {
   //   // console.log('All messages:', JSON.parse(allMsgs));

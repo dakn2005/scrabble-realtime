@@ -16,7 +16,7 @@
   onMount(() => {
 
     if (!$socket) {
-      $socket = io.connect(SOCKET_URL); 
+      $socket = io.connect(SOCKET_URL, { transports: ["websocket", 'polling'] }); 
 
       // rejoin room - below not working!
       // if (username == "") {
@@ -41,7 +41,7 @@
 </script>
 
 
-<Toaster richColors position="bottom-center" closeButton />
+<Toaster richColors position="bottom-center" />
 
 <!-- <button on:click={() => sideOpen = true}>Open</button> -->
 <Board />

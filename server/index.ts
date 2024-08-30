@@ -50,7 +50,7 @@ app.post('/api/games/add', async (req: Request, res: Response) => {
 
     let [status, err] = await createGame(req.body)
 
-    // TODO: implement LRU here
+    // TODO: implement LRU here - determine a threshhold
 
     if (status) {
         const games = await getGames();
@@ -126,7 +126,7 @@ io.on('connection', (socket: Socket) => {
         }
 
         socket.emit('join_reply', { status: 'success' });
-
+       
         // Join the user to a socket room
         socket.join(gameName);
 
@@ -149,6 +149,9 @@ io.on('connection', (socket: Socket) => {
         players.push({ id: socket.id, username, game: gameName });
         let gamePlayers = players.filter((user) => user?.game === gameName);
 
+        // console.log(gamePlayers);
+        io.to(gameName).emit('ingame_players', gamePlayers);
+
         //set current player
         let currentPlayer, tiledata
 
@@ -161,12 +164,11 @@ io.on('connection', (socket: Socket) => {
             currentPlayer = gs[0]?.currentplayer;
             tiledata = await getTiles(game, 7, gs);
         }
-        
-        io.to(gameName).emit('ingame_players', gamePlayers);
-        console.log(currentPlayer)
+
         io.to(gameName).emit('current_player', currentPlayer);
         socket.emit('tiles_picked', tiledata);
-
+        
+        // console.log(currentPlayer, tiledata, gamePlayers)
 
         // (async () => {
         //     let all_msgs = await readMessages(game);
@@ -219,8 +221,7 @@ io.on('connection', (socket: Socket) => {
     });
 
     socket.on('submit_words', async (data) => {
-        // TODO: check for word validity
-        // TODO: ensure words are represent in correct format from frontend - deprecate suffix tree
+        // ! ensure words are represent in correct format from frontend - deprecate suffix tree
 
         let all_verified: boolean[] = [];
 
@@ -228,6 +229,8 @@ io.on('connection', (socket: Socket) => {
             // https://lughayangu.com/sheng
             // https://kenyanmagazine.co.ke/200-sheng-words-and-their-meanings/
             for (const word of data.words) {
+                console.log(word)
+
                 let isword = shengTrie.search(word[0]);
 
                 if (!isword){
@@ -248,30 +251,33 @@ io.on('connection', (socket: Socket) => {
             }
         }
 
-        // if (data.game.lang == ELangs.en) {
-        //     // if eng, use the api below
-        //     // https://scrabblechecker.collinsdictionary.com/check/api/index.php?key=aa&isFriendly=1&nocache=1723803287116
-        //     for (const word of data.words) {
-        //         let isword = enTrie.search(word[0]);
+        if (data.game.lang == ELangs.en) {
+            // if eng, use the api below
+            // https://scrabblechecker.collinsdictionary.com/check/api/index.php?key=aa&isFriendly=1&nocache=1723803287116
+            for (const word of data.words) {
+                console.log(word)
 
-        //         // if (!word && data.game.use_scrabble_dictionary){
-        //         // TODO: mimic chrome browser to get results from this link
-        //         //     (async () => {
-        //         //         const response = await fetch('https://scrabblechecker.collinsdictionary.com/check/api/index.php?key=' + word.toLowerCase());
-        //         //         const status = await response.status
+                let isword = engTrie.search(word[0]);
 
-        //         //         isword = status == 200
-        //         //     })()
-        //         // }
-        //         if (isword)
-        //             all_verified.push(isword)
-        //     }
-        // }
+                // if (!word && data.game.use_scrabble_dictionary){
+                // TODO: mimic chrome browser to get results from this link
+                //     (async () => {
+                //         const response = await fetch('https://scrabblechecker.collinsdictionary.com/check/api/index.php?key=' + word.toLowerCase());
+                //         const status = await response.status
 
-        if (!all_verified.every(v => v == true)) {            
+                //         isword = status == 200
+                //     })()
+                // }
+
+                if (isword)
+                    all_verified.push(isword)
+            }
+        }
+
+        if (all_verified.every(v => v == true)) {            
             // change player turn
             let gamestate = await getGameState(data.game.name);
-            let cp = gamestate[0].currentplayer;
+            let cp = gamestate[0]?.currentplayer;
             let prevIdx: number = 0;
 
             players.forEach((p,i) => {
@@ -317,7 +323,7 @@ io.on('connection', (socket: Socket) => {
             io.to(data.game.name).emit('current_player', nextplayer);
 
             socket.to(data.game.name).emit('words_submitted', {
-                newlyVisited: data.newlyVisited,
+                nv: data.nv,
                 status: 'broadcast',
             });
 
@@ -329,7 +335,7 @@ io.on('connection', (socket: Socket) => {
 
     });
 
-    socket.on('player_playing', async (data) => {
+    socket.on('player_playing', async (data) => { 
         socket.to(data.game.name).emit('player_playing', data.nv)
     });
 
@@ -346,15 +352,18 @@ io.on('connection', (socket: Socket) => {
     });
 
     socket.on('return_tiles', async(data) =>{
+        // console.log(data)
+
         let gamestate = await getGameState(data.game.name);
         let tiles = gamestate[0]?.letterbag;
+
         if (tiles)
             tiles = [
                 ...tiles,
-                data.tiles
+                ...data.tiles.map((t: any) => t.letter)
             ];
         else
-            tiles = data.tiles;
+            tiles = data.tiles.map((t: any) => t.letter);
 
         await patchGameState(data.game.name, {
             letterbag: tiles

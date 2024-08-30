@@ -5,9 +5,8 @@
 
   import { SOCKET_URL, LANGS } from "$lib/constants.js";
   import { userStore, socket } from "$lib/stores.js";
-  import { Toaster } from "$lib/components/ui/sonner";
 
-  let username='kim', selectedgame;
+  let username, selectedgame;
   let newuname = "",
     newgamename = "",
     newgame_lang,
@@ -52,9 +51,11 @@
     }
 
     username = newuname;
+    newgamename = newgamename.charAt(0).toUpperCase() + newgamename.slice(1)
     selectedgame = `${newgamename}|${newgame_lang}`;
 
-    const resp = await fetch(SOCKET_URL + "/api/games/add", {
+    try{
+      const resp = await fetch(SOCKET_URL + "/api/games/add", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
@@ -65,28 +66,32 @@
       }),
     });
 
-    let res = await resp.json();
 
-    if (res.status == "fail") {
-      toast.warning(res.error);
-    } else {
-      // let gameObj = res.games.find((g) => g.name == newgame);
-      // game = gameObj.id
-      joinGame();
+
+      let res = await resp.json();
+      if (res.status == "fail") {
+        toast.warning(res.error);
+      } else {
+        // let gameObj = res.games.find((g) => g.name == newgame);
+        // game = gameObj.id
+        joinGame();
+      }
+    }catch(e){
+
+      toast.error('Error Communicating with the Server');
     }
+    
   };
 
   let use_en_scrabble_dict = true;
 </script>
 
-<Toaster richColors position="bottom-center" closeButton />
-
-<div class="w-full " style="background-color: #fbf7f6;">
+<div class="w-full" style="background-color: #fbf7f6;">
   <div class="card bg-slate-700 w-96 shadow-xl p-10 space-y-5 m-auto mt-48">
     <span class="m-auto text-4xl uppercase text-white">Karibu</span>
 
     <label class="input input-bordered input-md flex items-center gap-2">
-      <span class="text-xs text-slate-400"> username</span>
+      <span class="text-xs text-indigo-200 italic"> username</span>
       <input type="text" class="grow" placeholder="e.g. Kimana" bind:value="{username}" />
     </label>
 

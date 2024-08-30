@@ -4,21 +4,27 @@
   import Tile from "./Tile.svelte";
   import SpecialTile from "./SpecialTile.svelte";
 
-  export let row_id, tile_id, getLetterScore, proposedWordQueue, items = [], disabled = false;
+  export let row_id,
+    tile_id,
+    getLetterScore,
+    proposedWordQueue,
+    items = [],
+    disabled = false, playerWordSubmittedStatusCss;
 
   let isSpecial = false,
     tile_type = "";
 
   function considerDnd(e) {
     items = e.detail.items;
+    // console.log(e, items)
   }
 
   function finalizeDnd(e) {
-    items = e.detail.items;    
+    items = e.detail.items;
     // let value = e.target.getAttribute('data-item').split(',');
-    if (items[0]){
+    if (items[0]) {
       let scoremultiplier = scoreMultiplier();
-      proposedWordQueue(items[0].id, items[0].letter, [row_id, tile_id], scoremultiplier)
+      proposedWordQueue(items[0].id, items[0].letter, [row_id, tile_id], scoremultiplier);
     }
     // else{
     //   console.log(e.detail.items)
@@ -27,7 +33,7 @@
 
   // based on the board from: https://www.solitaireparadise.com/games_list/scrabble-online.html
   // also checkout the board: https://playscrabble.com/play/ai
-  let special_tiles = {
+  let special_squares = {
     0: {
       3: "dw",
       6: "tl",
@@ -79,15 +85,15 @@
   };
 
   function scoreMultiplier() {
-    let mapper = special_tiles[row_id] || special_tiles[14 - row_id];
+    let mapper = special_squares[row_id] || special_squares[14 - row_id];
     let squareScore = 1;
 
     if (mapper && mapper[tile_id]) {
       switch (mapper[tile_id]) {
         case "tw":
         case "tl":
-           squareScore = 3;
-           break;
+          squareScore = 3;
+          break;
         case "dw":
         case "dl":
         case "m":
@@ -100,7 +106,7 @@
   }
 
   $: if (row_id || tile_id) {
-    let mapper = special_tiles[row_id] || special_tiles[14 - row_id];
+    let mapper = special_squares[row_id] || special_squares[14 - row_id];
 
     if (mapper && mapper[tile_id]) {
       isSpecial = true;
@@ -125,7 +131,7 @@
     <SpecialTile {tile_type} />
   {:else}
     {#each items as tile (tile.id)}
-      <Tile id={tile.id} letter="{tile.letter}" score={getLetterScore(tile.letter)} />
+      <Tile id="{tile.id}" letter="{tile.letter}" score="{getLetterScore(tile.letter)}" {playerWordSubmittedStatusCss} />
     {/each}
   {/if}
 </div>

@@ -34,7 +34,7 @@ export default class Trie {
     }
 
     insert(word: string): void {
-        this.#insertAbstract(word.split(''), this.#prefixRoot);
+        this.#insertAbstract(word.toLowerCase().split(''), this.#prefixRoot);
         // this.#insertAbstract(word.split('').reverse(), this.#suffixRoot);
     }
 
@@ -52,7 +52,7 @@ export default class Trie {
     }
 
     search(word: string): boolean {
-        return this.#searchAbstract(word, this.#prefixRoot) //|| this.#searchAbstract(word, this.#suffixRoot)
+        return this.#searchAbstract(word.toLowerCase(), this.#prefixRoot) //|| this.#searchAbstract(word, this.#suffixRoot)
     }
 }
 
@@ -124,16 +124,16 @@ fs.readFileSync('./utils/dictionaries/sheng.txt', 'utf8')
 fs.readFileSync('./utils/dictionaries/en.txt', 'utf8')
     .split('\n')
     .forEach(word => {
-        if (word.split('').length > 1) {
-            engTrie.insert(word)
+        if (word.trim().split('').length > 1) {
+            engTrie.insert(word.trim())
         }
     });
 
 fs.readFileSync('./utils/dictionaries/swahili.txt', 'utf8')
     .split('\n')
     .forEach(word => {
-        if (word.split('').length > 1) {
-            swahiliTrie.insert(word)
+        if (word.trim().split('').length > 1) {
+            swahiliTrie.insert(word.trim())
         }
     });
 

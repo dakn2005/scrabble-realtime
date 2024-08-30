@@ -1,6 +1,4 @@
 <script>
-  import Tile from "./Tile.svelte";
-
   export let tile_type;
 </script>
 
