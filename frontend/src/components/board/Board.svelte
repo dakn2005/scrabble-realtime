@@ -20,7 +20,7 @@
 
   onMount(() => {
     setTimeout(() => {
-      console.log(currentPlayer);
+      // console.log(currentPlayer);
 
       if (currentPlayer == undefined) {
         toast.warning("Couldn't communicate with the server");
@@ -36,6 +36,7 @@
   });
 
   onDestroy(() => {
+    console.log('destroying', pickedTiles)
     if (pickedTiles.length > 0) $socket.emit("return_tiles", { game, tiles: pickedTiles });
 
     pickedTiles = [];
@@ -78,11 +79,12 @@
   let queue = []; //new Queue();
   let visited = new Set();
 
-  let newlyVisited = new Map(), newlyVisitedBroadcast = new Map();
+  let newlyVisited = new Map(),
+    newlyVisitedBroadcast = new Map();
   let wordMap = new Map();
   let wholeWordScores = [];
-  let proposedWordScore = 0;
-  let playerWordSubmittedStatusCss = '';
+  let proposedTotalWordScore = 0;
+  // let playerWordSubmittedStatusCss = '';
 
   // let newlySubbmittedWord = [
   //   { id: 1, letter: "M" },
@@ -109,19 +111,19 @@
 
   function proposedWordQueue(id, letter, position, score) {
     let calcScore = () => {
-      proposedWordScore = 0;
+      proposedTotalWordScore = 0;
       wholeWordScores = [];
 
       for (let [, lerrer, , sko] of queue) {
         if (sko[0] > 1) {
           if (sko[1] == "tw" || sko[1] == "dw" || sko[1] == "m") {
             wholeWordScores.push(sko[0]);
-            proposedWordScore += getLetterScore(lerrer);
+            proposedTotalWordScore += getLetterScore(lerrer);
           } else if (sko[1] == "dl" || sko[1] == "tl") {
-            proposedWordScore += getLetterScore(lerrer) * sko[0];
+            proposedTotalWordScore += getLetterScore(lerrer) * sko[0];
           }
         } else {
-          proposedWordScore += getLetterScore(lerrer);
+          proposedTotalWordScore += getLetterScore(lerrer);
         }
       }
     };
@@ -147,7 +149,7 @@
       newlyVisited.set(`${position[0]},${position[1]}`, letter);
     }
 
-    playerWordSubmittedStatusCss = "";
+    // playerWordSubmittedStatusCss = "";
 
     $socket.emit("player_playing", {
       nv: Object.fromEntries(newlyVisited),
@@ -163,6 +165,8 @@
 
     let colarr = [],
       rowarr = [];
+
+    let invalidWordArr = [[], [], "invalid word :("];
 
     let wordidentifier = (letter, coord, rowwise, colwise) => {
       let lastcoords = thewordcoords.length > 0 ? thewordcoords.at(-1) : null;
@@ -190,7 +194,7 @@
 
           if (rowwise) {
             let visited_letter = wordMap.get(`${newRow},${newCol}`);
-            proposedWordScore += getLetterScore(visited_letter);
+            proposedTotalWordScore += getLetterScore(visited_letter);
 
             if (newCol < coord[1]) {
               theword.unshift(visited_letter);
@@ -205,7 +209,7 @@
 
           if (colwise) {
             let visited_letter = wordMap.get(`${newRow},${newCol}`);
-            proposedWordScore += getLetterScore(visited_letter);
+            proposedTotalWordScore += getLetterScore(visited_letter);
 
             if (newRow < coord[0]) {
               theword.unshift(visited_letter);
@@ -239,7 +243,6 @@
     let rowwise = Math.max(...rowarr) - Math.min(...rowarr) == 0;
     let colwise = Math.max(...colarr) - Math.min(...colarr) == 0;
 
-    // further validations
     if (rowwise || colwise) {
       let queueSort = {};
 
@@ -248,55 +251,49 @@
         queueSort[s] = q;
       }
 
-      colarr = [];
-      rowarr = [];
       queue = Object.values(queueSort);
 
-      // console.log(queue);
-
-      queue.forEach((q) => {
-        let pos = q[2];
-        rowarr.push(pos[0]);
-        colarr.push(pos[1]);
-      });
-
-      rowarr.reduce((a, b) => {
-        let minus = Math.abs(a - b);
-        if (minus > 1) {
-          colwise = false;
-          rowwise = false;
-        }
-
-        return b;
-      });
-
-      colarr.reduce((a, b) => {
-        let minus = Math.abs(a - b);
-
-        if (minus > 1) {
-          rowwise = false;
-          colwise = false;
-        }
-
-        return b;
-      });
-    }
-
-    if (rowwise || colwise) {
       for (let [, letter, pos] of queue) {
         wordidentifier(letter, pos, rowwise, colwise);
       }
     } else {
-      return [[], [], "invalid word :("];
+      return invalidWordArr;
     }
 
-    return [theword.join(""), thewordcoords, null];
+    // further validations
+
+    colarr = [];
+    rowarr = [];
+    thewordcoords.forEach((pos) => {
+      rowarr.push(pos[0]);
+      colarr.push(pos[1]);
+    });
+
+    rowarr.reduce((a, b) => {
+      let minus = Math.abs(a - b);
+      if (minus > 1) {
+        colwise = false;
+        rowwise = false;
+      }
+      return b;
+    });
+
+    colarr.reduce((a, b) => {
+      let minus = Math.abs(a - b);
+      if (minus > 1) {
+        rowwise = false;
+        colwise = false;
+      }
+      return b;
+    });
+
+    return (colwise || rowwise) ? [theword.join(""), thewordcoords, null] : invalidWordArr;
   }
 
   function submit() {
     //calculate queue word score
     wholeWordScores.forEach((s) => {
-      proposedWordScore *= s;
+      proposedTotalWordScore *= s;
     });
 
     let [proposedWord, proposedWordCoords, error] = getFullWord();
@@ -306,7 +303,7 @@
       return;
     }
 
-    let words = [[proposedWord, proposedWordCoords, proposedWordScore]];
+    let words = [[proposedWord, proposedWordCoords, proposedTotalWordScore]];
 
     // while (queue.length > 0) {
     for (let qelem of queue) {
@@ -373,75 +370,121 @@
     dragDisabled: currentPlayer?.toLowerCase() != username?.toLowerCase(),
   };
 
-  // $: console.log($socket)
+  // $: console.log(currentPlayer?.toLowerCase(), username?.toLowerCase())
+  let temp_1 = 0;
 
   $: if ($socket) {
-    $socket.on("words_submitted", (data) => {
-      throttle(() => {
-        console.log(data);
-      }, 1000);
+    if (temp_1 > 0) {
+      temp_1 = 0;
+    } else {
+      temp_1++;
 
-      if (data.status == "broadcast") {
-        Object.entries(data.nv).forEach((nv) => {
+      $socket.on("words_submitted", (data) => {
+        // throttle(() => {
+        //   console.log(data);
+        // }, 1000);
+
+        if (data.status == "broadcast") {
+          Object.entries(data.nv).forEach((nv) => {
+            let [pos, l] = nv;
+            wordMap.set(pos, l);
+          });
+
+          newlyVisitedBroadcast.clear();
+        } else {
+          if (data.status == "fiti") {
+            newlyVisited.forEach((v, k) => {
+              wordMap.set(k, v);
+            });
+
+            queue = [];
+            visited.clear();
+            newlyVisited.clear();
+            toast.success("Word Accepted :-)", { duration: 4000 });
+          } else if (data.status == "chore") {
+            toast.error("Word Not Found :-(", { duration: 4000 });
+          }
+
+          // playerWordSubmittedStatusCss = data.status;
+        }
+      });
+
+      $socket.on("player_playing", (data) => {
+        newlyVisitedBroadcast.clear();
+
+        Object.entries(data).forEach((nv) => {
           let [pos, l] = nv;
-          wordMap.set(pos, l);
+          newlyVisitedBroadcast.set(pos, l);
         });
 
-        newlyVisitedBroadcast.clear();
-      } else {
-        if (data.status == "fiti") {
-          newlyVisited.forEach((v, k) => {
-            wordMap.set(k, v);
-          });
-          
-          queue = [];
-          visited.clear();
-          newlyVisited.clear();
+        // console.log(newlyVisitedBroadcast);
+        boardGrid = boardGrid;
+      });
+
+      //TODO: socket calls multiple times - look into resolution
+      $socket.on("init_gamestate", (state) => {
+        //assumption state has already been loaded
+        if (pickedTiles.length > 0) {
+          return;
         }
 
-        playerWordSubmittedStatusCss = data.status;
-      }
-    });
+        //init tiles
+        remainingTiles = state.tiledata.remaining;
 
-    $socket.on("player_playing", (data) => {
-      newlyVisitedBroadcast.clear();
-
-      Object.entries(data).forEach((nv) => {
-        let [pos, l] = nv;
-        newlyVisitedBroadcast.set(pos, l);
-      });
-
-      // console.log(newlyVisitedBroadcast);
-      boardGrid = boardGrid;
-    });
-
-    $socket.on("ingame_players", (data) => {
-      gamePlayers = data;
-      // console.log("ingame_players", data);
-    });
-
-    $socket.on("current_player", (player) => {
-      currentPlayer = player;
-      console.log("current player", player);
-    });
-
-    $socket.on("tiles_picked", (data) => {
-      if (pickedTiles.length == 7) return;
-
-      remainingTiles = data.remaining;
-
-      data.tiles.forEach((t) => {
-        pickedTiles.push({
-          id: ulid(),
-          letter: t,
+        state.tiledata.tiles.forEach((t) => {
+          pickedTiles.push({
+            id: ulid(),
+            letter: t,
+          });
         });
+
+        pickedTiles = pickedTiles;
+
+        //init gamestate
+        state.wordsdata.forEach((worddatum) => {
+          let [word, coords] = worddatum[0];
+          let wordarr = word.split("");
+
+          coords.forEach((coord) => {
+            wordMap.set(coord.join(","), wordarr.shift());
+          });
+        });
+
+        wordMap = wordMap;
+
+        // console.log(state)
+        // console.log(pickedTiles)
+        console.log(wordMap);
       });
 
-      pickedTiles = pickedTiles;
-    });
+      $socket.on("ingame_players", (data) => {
+        gamePlayers = data;
+        // console.log("ingame_players", data);
+      });
 
-    $socket.on("receive_message", (data) => {
-      // throttle(() => {
+      $socket.on("current_player", (player) => {
+        currentPlayer = player;
+        toast.info(`It's ${player}'s turn`, { duration: 2000 });
+        // console.log("current player", player, temp_1);
+      });
+
+      $socket.on("tiles_picked", (data) => {
+        if (pickedTiles.length == 7) return;
+
+        remainingTiles = data.remaining;
+
+        data.tiles.forEach((t) => {
+          pickedTiles.push({
+            id: ulid(),
+            letter: t,
+          });
+        });
+
+        pickedTiles = pickedTiles;
+      });
+
+      $socket.on("receive_message", (data) => {
+        // throttle(() => {
         $messages = [
           ...$messages,
           {
@@ -452,19 +495,9 @@
         ];
 
         if (document.getElementById("chats-container")) document.getElementById("chats-container").scrollTop = document.getElementById("chats-container")?.scrollHeight;
-      // }, 1000);
-    });
-
-    // $socket.on("receive_message", (data) => {
-    //   $messages = [
-    //     ...$messages,
-    //     {
-    //       message: data.message,
-    //       username: data.username,
-    //       __createdtime__: data.__createdtime__,
-    //     },
-    //   ];
-    // });
+        // }, 1000);
+      });
+    }
   }
 </script>
 
@@ -483,24 +516,10 @@
           <div class="board-row">
             {#each row as square}
               {#if newlyVisitedBroadcast.size > 0 && newlyVisitedBroadcast.has(`${i},${square.id}`)}
-                <Square 
-                  row_id="{i}" 
-                  tile_id="{square.id}" 
-                  {getLetterScore} 
-                  {proposedWordQueue} 
-                  items="{[{ id: ulid(), letter: newlyVisitedBroadcast.get(`${i},${square.id}`) }]}" 
-                  disabled="{currentPlayer !== username}" 
-                />
-              {:else if wordMap.has(`${i}${square.id}`)}
-                <Square 
-                  row_id="{i}" 
-                  tile_id="{square.id}" 
-                  {getLetterScore} 
-                  {proposedWordQueue} 
-                  items="{[{ id: ulid(), letter: wordMap.get(`${i},${square.id}`) }]}" 
-                  disabled="{true}" 
-                  {playerWordSubmittedStatusCss}
-                />
+                <Square row_id="{i}" tile_id="{square.id}" {getLetterScore} {proposedWordQueue} items="{[{ id: ulid(), letter: newlyVisitedBroadcast.get(`${i},${square.id}`) }]}" disabled="{currentPlayer?.toLowerCase() != username?.toLowerCase()}" />
+              {:else if wordMap.has(`${i},${square.id}`)}
+                <Square row_id="{i}" tile_id="{square.id}" {getLetterScore} {proposedWordQueue} items="{[{ id: ulid(), letter: wordMap.get(`${i},${square.id}`) }]}" disabled="{true}" />
+                <!-- {playerWordSubmittedStatusCss} -->
               {:else}
                 <Square row_id="{i}" tile_id="{square.id}" {getLetterScore} {proposedWordQueue} />
               {/if}
@@ -549,7 +568,6 @@
     <!-- users[scores] | tiles left | turn history |  -->
 
     <div class="flex flex-col md:flex-row w-full p-6 md:p-2">
-
       <div class="w-full md:w-1/3 text-center mb-4 md:mb-0">
         <div class="flex flex-row">
           {#each gamePlayers as player}

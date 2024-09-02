@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from "svelte";
+  import { onDestroy, onMount } from "svelte";
   import { goto } from "$app/navigation";
   import { toast } from "svelte-sonner";
 
@@ -13,10 +13,29 @@
     games = [];
   let joining = false;
 
-  onMount(async () => {
-    const resp = await fetch(SOCKET_URL + "/api/games");
-    games = await resp.json();
+  let interval;
+
+  onMount(() => {
+    resetInterval();
   });
+  
+  onDestroy(() => {
+    clearInterval(interval);
+    // console.log(interval);
+  });
+  
+  function resetInterval() {
+    clearInterval(interval);
+
+    const caller = async () => {
+      const resp = await fetch(SOCKET_URL + "/api/games");
+      games = await resp.json();
+    };
+
+    interval = setInterval(caller, 15000);
+    caller();
+  }
+
 
   const joinGame = (e) => {
     joining = true;
@@ -51,22 +70,20 @@
     }
 
     username = newuname;
-    newgamename = newgamename.charAt(0).toUpperCase() + newgamename.slice(1)
+    newgamename = newgamename.charAt(0).toUpperCase() + newgamename.slice(1);
     selectedgame = `${newgamename}|${newgame_lang}`;
 
-    try{
+    try {
       const resp = await fetch(SOCKET_URL + "/api/games/add", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        name: newgamename,
-        created_by: username,
-        lang: newgame_lang,
-        use_scrabble_dictionary: use_en_scrabble_dict,
-      }),
-    });
-
-
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          name: newgamename,
+          created_by: username,
+          lang: newgame_lang,
+          use_scrabble_dictionary: use_en_scrabble_dict,
+        }),
+      });
 
       let res = await resp.json();
       if (res.status == "fail") {
@@ -76,11 +93,9 @@
         // game = gameObj.id
         joinGame();
       }
-    }catch(e){
-
-      toast.error('Error Communicating with the Server');
+    } catch (e) {
+      toast.error("Error Communicating with the Server");
     }
-    
   };
 
   let use_en_scrabble_dict = true;

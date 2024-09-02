@@ -37,7 +37,7 @@ type TLetterBag = {
 }
 
 type TPlayerData = {
-    words: string[] //word|placememnt|score
+    words: [] //word|placememnt|score
     timestamp: Date
 }
 
@@ -52,4 +52,4 @@ enum ELangs {
 }
 // interface IGameSt
 
-export { IUser, IMessage, IGame,IGameStateTable, TLetterBag, TStats, ELangs }
+export { IUser, IMessage, IGame,IGameStateTable, TLetterBag, TPlayerData, TStats, ELangs }
