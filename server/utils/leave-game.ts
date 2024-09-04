@@ -1,5 +1,10 @@
 import { IUser } from "../interfaces";
 
-export default function leaveRoom(userID: string, chatRoomUsers: IUser[]) {
-    return chatRoomUsers.filter((user: IUser) => user.id != userID);
+
+export function leaveGameBySocketId(socketId: string, chatRoomUsers: IUser[]) {
+    return chatRoomUsers.filter((user: IUser) => user.id != socketId);
+}
+
+export function leaveGame(username: string, game: string, chatRoomUsers: IUser[]) {
+    return chatRoomUsers.filter((user: IUser) => user.username != username && user.game != game);
 }

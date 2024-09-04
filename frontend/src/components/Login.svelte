@@ -4,7 +4,7 @@
   import { toast } from "svelte-sonner";
 
   import { SOCKET_URL, LANGS } from "$lib/constants.js";
-  import { userStore, socket } from "$lib/stores.js";
+  import { userStore, socket, messages, recoverTiles } from "$lib/stores.js";
 
   let username, selectedgame;
   let newuname = "",
@@ -17,6 +17,15 @@
 
   onMount(() => {
     resetInterval();
+
+    if (Object.keys($userStore).length > 0) {
+      let { username, game } = $userStore;
+      $socket?.emit("leave_game", { username, gameName: game?.name, recoverTiles: $recoverTiles });
+
+      $userStore = {};
+      $messages = [];
+      $recoverTiles = null;
+    }
   });
   
   onDestroy(() => {
@@ -46,6 +55,7 @@
       toast.error("Please select a game and enter a username");
       joining = false;
     } else {
+      username = username.charAt(0).toUpperCase() + username.slice(1);
       let ustore = { username, game: { name: gameName, lang: gameLang } };
       $userStore = ustore;
 
@@ -69,7 +79,7 @@
       return;
     }
 
-    username = newuname;
+    username = newuname.charAt(0).toUpperCase() + newuname.slice(1);
     newgamename = newgamename.charAt(0).toUpperCase() + newgamename.slice(1);
     selectedgame = `${newgamename}|${newgame_lang}`;
 

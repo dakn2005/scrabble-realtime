@@ -2,16 +2,20 @@
   import { goto } from "$app/navigation";
   import { settingsOpen, chatsOpen, socket, userStore, messages } from "$lib/stores.js";
 
-  export let submit, isbottom = false, setToggleSideBar;
+  export let submit,
+    pickTilesFunc,
+    leaveGameFunc,
+    passMeFunc,
+    setToggleSideBar,
+    disabled,
+    isbottom = false;
 
   const { username, game } = $userStore;
-
 </script>
 
 <ul class="{isbottom ? 'md:invisible menu bottommenu' : 'hidden md:menu sidemenu mt-24 mb-auto'}">
-  
   <li>
-    <button on:click={submit}>
+    <button on:click="{submit}" {disabled}>
       <i class="fa-solid fa-upload"></i>
       <span>submit</span>
     </button>
@@ -20,17 +24,14 @@
   <!-- <div class="divider divider-horizontal"></div> -->
 
   <li>
-    <button>
+    <button on:click="{passMeFunc}" {disabled}>
       <i class="fa-solid fa-forward-step"></i>
       <span>pass</span>
     </button>
   </li>
 
   <li>
-    <!-- <button on:click={
-      $socket.emit('pick_tiles')
-    }> -->
-    <button>
+    <button on:click="{pickTilesFunc}">
       <img src="scrabble-letter-small.png" alt="letter" width="16" height="16" />
       <span>pick tiles </span>
     </button>
@@ -52,13 +53,7 @@
   </li>
 
   <li>
-    <button on:click="{() => {
-      $socket.emit("leave_game", { username, gameName: game?.name });
-      $userStore = {};
-      $messages = [];
-      
-      goto('/')
-    }}">
+    <button on:click="{leaveGameFunc}">
       <i class="fa-solid fa-circle-xmark md:text-lg text-red-600"></i>
       <span>exit</span>
     </button>

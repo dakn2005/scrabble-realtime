@@ -45,6 +45,10 @@ type TStats = {
     [dict_key: string]: TPlayerData[]
 }
 
+type TTempTiles = {
+    [dict_key: string]: string[] | undefined | null
+}
+
 enum ELangs {
     sheng = 'Sheng + Swahili', 
     en = 'English',
@@ -52,4 +56,4 @@ enum ELangs {
 }
 // interface IGameSt
 
-export { IUser, IMessage, IGame,IGameStateTable, TLetterBag, TPlayerData, TStats, ELangs }
+export { IUser, IMessage, IGame,IGameStateTable, ELangs, TLetterBag, TPlayerData, TStats, TTempTiles }

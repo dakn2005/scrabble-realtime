@@ -16,7 +16,7 @@
   import FloatingBtn from "./FloatingBtn.svelte";
   // import Queue from "$lib/queue.js";
 
-  import { socket, userStore, messages, settingsOpen } from "$lib/stores.js";
+  import { socket, userStore, messages, settingsOpen, recoverTiles } from "$lib/stores.js";
 
   onMount(() => {
     setTimeout(() => {
@@ -24,32 +24,40 @@
 
       if (currentPlayer == undefined) {
         toast.warning("Couldn't communicate with the server");
+
         setTimeout(() => {
-          $socket.emit("leave_game", { username, gameName: game?.name });
+          $socket?.emit("leave_game", { username, gameName: game?.name });
           $userStore = {};
           $messages = [];
 
           goto("/");
+
         }, 2000);
       }
     }, 2000);
+
   });
 
-  onDestroy(() => {
-    console.log('destroying', pickedTiles)
-    if (pickedTiles.length > 0) $socket.emit("return_tiles", { game, tiles: pickedTiles });
+  // onDestroy(() => {
+  //   console.log("destroying", pickedTiles);
 
-    pickedTiles = [];
-  });
+  //   if (pickedTiles.length > 0) $socket.emit("return_tiles", { game, tiles: pickedTiles });
+
+  //   pickedTiles = [];
+  // });
 
   let gamePlayers = [],
     remainingTiles = 0;
   let currentPlayer,
     pickedTiles = [
-      // { id: ulid(), letter: "M" },
-      // { id: ulid(), letter: "B" },
-      // { id: ulid(), letter: "O" },
-      // { id: ulid(), letter: "G" },
+      // { id: ulid(), letter: "D" },
+      // { id: ulid(), letter: "T" },
+      // { id: ulid(), letter: "E" },
+      // { id: ulid(), letter: "D" },
+      // // { id: ulid(), letter: "M" },
+      // // { id: ulid(), letter: "B" },
+      // // { id: ulid(), letter: "O" },
+      // // { id: ulid(), letter: "G" },
       // { id: ulid(), letter: "I" },
       // { id: ulid(), letter: "D" },
       // { id: ulid(), letter: "I" },
@@ -189,7 +197,7 @@
           continue;
         }
 
-        while (wordMap.has(`${newRow},${newCol}`)) {
+        while (wordMap.has(`${newRow},${newCol}`) && !visited.has(`${newRow},${newCol}`)) {
           visited.add(`${newRow},${newCol}`);
 
           if (rowwise) {
@@ -287,7 +295,7 @@
       return b;
     });
 
-    return (colwise || rowwise) ? [theword.join(""), thewordcoords, null] : invalidWordArr;
+    return colwise || rowwise ? [theword.join(""), thewordcoords, null] : invalidWordArr;
   }
 
   function submit() {
@@ -345,8 +353,25 @@
 
     // console.log({ words, userdetails: $userStore });
 
-    $socket.emit("submit_words", { username, game, words, nv: Object.fromEntries(newlyVisited) });
+    $socket.emit("submit_words", { username, game, words, recoverTiles: pickedTiles, nv: Object.fromEntries(newlyVisited) });
   }
+
+  function pickTilesFunc() {
+    let tiles_2_pick = 7 - pickedTiles.length;
+    $socket.emit("pick_tiles", { game, tiles_2_pick });
+  }
+
+  function passMeFunc() {
+    $socket.emit("pass_me", { game });
+  }
+
+  function leaveGameFunc() {
+      $socket.emit("leave_game", { username, gameName: game?.name, recoverTiles: pickedTiles });
+      $userStore = {};
+      $messages = [];
+      
+      goto('/')
+    }
 
   $: if (pickedTiles) {
     // check whether id is in both pickedletters and queue, delete if so
@@ -370,140 +395,147 @@
     dragDisabled: currentPlayer?.toLowerCase() != username?.toLowerCase(),
   };
 
-  // $: console.log(currentPlayer?.toLowerCase(), username?.toLowerCase())
-  let temp_1 = 0;
+  // $: console.log($socket)
 
-  $: if ($socket) {
-    if (temp_1 > 0) {
-      temp_1 = 0;
+  $: if ($socket == null){
+    toast.warning("Issues communicating with the server");
+    $recoverTiles = pickedTiles;
+    goto("/");
+  }
+
+  $socket?.on("words_submitted", (data) => {
+
+    console.log(data, newlyVisited);
+
+    if (data.status == "broadcast") {
+      Object.entries(data.nv).forEach((nv) => {
+        let [pos, l] = nv;
+        wordMap.set(pos, l);
+      });
+
+      wordMap = wordMap;
+
+      newlyVisitedBroadcast.clear();
     } else {
-      temp_1++;
-
-      $socket.on("words_submitted", (data) => {
-        // throttle(() => {
-        //   console.log(data);
-        // }, 1000);
-
-        if (data.status == "broadcast") {
-          Object.entries(data.nv).forEach((nv) => {
-            let [pos, l] = nv;
-            wordMap.set(pos, l);
-          });
-
-          newlyVisitedBroadcast.clear();
-        } else {
-          if (data.status == "fiti") {
-            newlyVisited.forEach((v, k) => {
-              wordMap.set(k, v);
-            });
-
-            queue = [];
-            visited.clear();
-            newlyVisited.clear();
-            toast.success("Word Accepted :-)", { duration: 4000 });
-          } else if (data.status == "chore") {
-            toast.error("Word Not Found :-(", { duration: 4000 });
-          }
-
-          // playerWordSubmittedStatusCss = data.status;
-        }
-      });
-
-      $socket.on("player_playing", (data) => {
-        newlyVisitedBroadcast.clear();
-
-        Object.entries(data).forEach((nv) => {
-          let [pos, l] = nv;
-          newlyVisitedBroadcast.set(pos, l);
-        });
-
-        // console.log(newlyVisitedBroadcast);
-        boardGrid = boardGrid;
-      });
-
-      //TODO: socket calls multiple times - look into resolution
-      $socket.on("init_gamestate", (state) => {
-        //assumption state has already been loaded
-        if (pickedTiles.length > 0) {
-          return;
-        }
-
-        //init tiles
-        remainingTiles = state.tiledata.remaining;
-
-        state.tiledata.tiles.forEach((t) => {
-          pickedTiles.push({
-            id: ulid(),
-            letter: t,
-          });
-        });
-
-        pickedTiles = pickedTiles;
-
-        //init gamestate
-        state.wordsdata.forEach((worddatum) => {
-          let [word, coords] = worddatum[0];
-          let wordarr = word.split("");
-
-          coords.forEach((coord) => {
-            wordMap.set(coord.join(","), wordarr.shift());
-          });
+      if (data.status == "fiti") {
+        newlyVisited.forEach((v, k) => {
+          wordMap.set(k, v);
         });
 
         wordMap = wordMap;
 
-        // console.log(state)
-        // console.log(pickedTiles)
-        console.log(wordMap);
-      });
+        queue = [];
+        visited.clear();
+        newlyVisited.clear();
+        toast.success("Word Accepted :-)", { duration: 4000 });
+      } else if (data.status == "chorea") {
+        toast.error("Word Not Found :-(", { duration: 4000 });
+      }
 
-      $socket.on("ingame_players", (data) => {
-        gamePlayers = data;
-        // console.log("ingame_players", data);
-      });
-
-      $socket.on("current_player", (player) => {
-        currentPlayer = player;
-        toast.info(`It's ${player}'s turn`, { duration: 2000 });
-        // console.log("current player", player, temp_1);
-      });
-
-      $socket.on("tiles_picked", (data) => {
-        if (pickedTiles.length == 7) return;
-
-        remainingTiles = data.remaining;
-
-        data.tiles.forEach((t) => {
-          pickedTiles.push({
-            id: ulid(),
-            letter: t,
-          });
-        });
-
-        pickedTiles = pickedTiles;
-      });
-
-      $socket.on("receive_message", (data) => {
-        // throttle(() => {
-        $messages = [
-          ...$messages,
-          {
-            message: data.message,
-            username: data.username,
-            __createdtime__: data.__createdtime__,
-          },
-        ];
-
-        if (document.getElementById("chats-container")) document.getElementById("chats-container").scrollTop = document.getElementById("chats-container")?.scrollHeight;
-        // }, 1000);
-      });
+      // playerWordSubmittedStatusCss = data.status;
     }
-  }
+
+    console.log(wordMap);
+  });
+
+  $socket?.on("player_playing", (data) => {
+    newlyVisitedBroadcast.clear();
+
+    Object.entries(data).forEach((nv) => {
+      let [pos, l] = nv;
+      newlyVisitedBroadcast.set(pos, l);
+    });
+
+    // console.log(newlyVisitedBroadcast);
+    boardGrid = boardGrid;
+  });
+
+  //TODO: socket calls multiple times - look into resolution
+  $socket?.on("init_gamestate", (state) => {
+    //assumption state has already been loaded
+    if (pickedTiles.length > 0) return;
+
+    //init tiles
+    remainingTiles = state.tiledata.remaining;
+
+    state.tiledata.tiles.forEach((t) => {
+      pickedTiles.push({
+        id: ulid(),
+        letter: t,
+      });
+    });
+
+    pickedTiles = pickedTiles;
+
+    //init gamestate
+    state.wordsdata.forEach((worddatum) => {
+      let [word, coords] = worddatum[0];
+      let wordarr = word.split("");
+
+      coords.forEach((coord) => {
+        wordMap.set(coord.join(","), wordarr.shift());
+      });
+    });
+
+    wordMap = wordMap;
+
+    // console.log(state)
+    // console.log(pickedTiles)
+    // console.log(wordMap);
+  });
+
+  $socket?.on("ingame_players", (data) => {
+    gamePlayers = data;
+    // console.log("ingame_players", data);
+  });
+
+  $socket?.on("current_player", (player) => {
+
+    currentPlayer = player;
+    toast.info(`It's ${player}'s turn`, { duration: 2000 });
+    // console.log("current player", player, temp_1);
+  });
+
+  $socket?.on("tiles_picked", (data) => {
+    if (pickedTiles.length == 7) return;
+
+    remainingTiles = data.remaining;
+
+    data.tiles.forEach((t) => {
+      pickedTiles.push({
+        id: ulid(),
+        letter: t,
+      });
+    });
+
+    pickedTiles = pickedTiles;
+  });
+
+  $socket?.on("receive_message", (data) => {
+
+    $messages = [
+      ...$messages,
+      {
+        message: data.message,
+        username: data.username,
+        __createdtime__: data.__createdtime__,
+      },
+    ];
+
+    console.log(document.getElementById("chats-container")?.scrollHeight);
+
+    if (document.getElementById("chats-container")) {
+
+      document.getElementById("chats-container").scrollTop = document.getElementById("chats-container")?.scrollHeight + 150;
+      document.getElementById("chats-container").scrollIntoView({ behavior: "smooth" });
+    }
+    // }, 1000);
+  });
 </script>
 
 <div class="game-container game-height">
   <div class="flex {!toggleSideBar ? 'flex-row' : 'flex-row-reverse'}">
-    <SideBottomMenu {setToggleSideBar} {submit} />
+    <SideBottomMenu {setToggleSideBar} {submit} {pickTilesFunc} {passMeFunc} {leaveGameFunc} disabled="{currentPlayer?.toLowerCase() != username?.toLowerCase()}" />
 
     <div class="board">
       <p class="text-4xl md:text-6xl text-white" style="font-family: 'Monoton', cursive;">

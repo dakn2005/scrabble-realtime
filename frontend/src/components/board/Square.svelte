@@ -9,7 +9,8 @@
     getLetterScore,
     proposedWordQueue,
     items = [],
-    disabled = false, playerWordSubmittedStatusCss;
+    disabled, 
+    playerWordSubmittedStatusCss;
 
   let isSpecial = false,
     tile_type = "";
@@ -119,7 +120,7 @@
     items,
     dropTargetStyle: {},
     flipDurationMs: 100,
-    dragDisabled: disabled,
+    dragDisabled: disabled ?? (isSpecial && items.length == 0)
   };
 
   // $: console.log(items)

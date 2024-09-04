@@ -10,9 +10,9 @@ import cors from 'cors';
 import 'dotenv/config';
 import flatten from 'lodash/flatten';
 
-import { IUser, ELangs, IGameStateTable, IGame, TStats, TPlayerData } from './interfaces'
+import { IUser, ELangs, IGameStateTable, IGame, TStats, TPlayerData, TTempTiles } from './interfaces'
 import { getGames, createGame, upsertGameState, patchGameState, getGameState } from './database/services/crud';
-import leaveGame from './utils/leave-game';
+import { leaveGame, leaveGameBySocketId } from './utils/leave-game';
 import errorHandling from './utils/errorHandling';
 import { shengTrie, engTrie, swahiliTrie, initShengLetterBag, initEnLetterBag } from './utils/tries';
 
@@ -75,13 +75,13 @@ const io = new Server(server, {
         origin: ioCorsUrl,
         methods: ['GET', 'POST'],
     },
+    transports: ['websocket', 'polling'],
 });
 
 const CHAT_BOT = 'Gamebot';
 // Add this
-let players: IUser[] = []; // All users in current chat room
-
-
+let players: IUser[] = [];
+let tempPlayerTileData: TTempTiles = {};
 
 const getTiles = async (game: IGame, tiles_2_pick: number, incoming_gamestate?: IGameStateTable[]) => {
     let gamestate = incoming_gamestate ?? await getGameState(game.name);
@@ -111,9 +111,6 @@ io.on('connection', (socket: Socket) => {
     socket.on('join_game', async (data) => {
         let { username, game } = data; // Data sent from client when join_room event emitted
         let gameName = game.name;
-
-        username = username.toLowerCase()
-        username = username.charAt(0).toUpperCase() + username.slice(1);
 
         // check is username already in game
         if (players.find(user => user.game == gameName && user.username == username)) {
@@ -153,11 +150,11 @@ io.on('connection', (socket: Socket) => {
 
         // console.log(gamePlayers);
         io.to(gameName).emit('ingame_players', gamePlayers);
-
+        
         //set current player
         let currentPlayer, tiledata, wordsdata;
         let gs: IGameStateTable[] = await getGameState(game.name);
-
+        
         if (gamePlayers.length == 1) {
             currentPlayer = username
             tiledata = await getTiles(game, 7, gs);
@@ -176,7 +173,13 @@ io.on('connection', (socket: Socket) => {
 
         socket.emit('init_gamestate', { tiledata, wordsdata });
 
-        // console.log(currentPlayer, tiledata, gamePlayers)
+        // console.log(currentPlayer, tiledata, gamePlayers);
+        
+        tempPlayerTileData = {
+            [currentPlayer]: tiledata?.tiles,
+        }
+
+        console.log('joining', currentPlayer, tempPlayerTileData);
 
         // (async () => {
         //     let all_msgs = await readMessages(game);
@@ -198,29 +201,56 @@ io.on('connection', (socket: Socket) => {
         // saveMessage(rec)
     });
 
-    socket.on('leave_game', (data) => {
+    socket.on('leave_game', async (data) => {
+
         const { username, gameName } = data;
-        // console.log(username, game)
+        // let cp = players.find((user) => user.game == gameName && user.username);
+
+        // if (cp?.id != socket.id ) {
+        let temptiles = tempPlayerTileData[username];
+
+        // console.log('leaving: ', username, tempPlayerTileData, tempPlayerTileData[username])
+
+        if (temptiles && !data?.recoverTiles) {
+            let gs: IGameStateTable[] = await getGameState(gameName);
+            let lb = gs[0].letterbag;
+
+            if (lb) await patchGameState(gameName, {
+                letterbag: [...lb, ...temptiles]
+            });
+
+            delete tempPlayerTileData[username];
+        } else if (data?.recoverTiles) {
+            let gs: IGameStateTable[] = await getGameState(gameName);
+            let lb = gs[0].letterbag;
+
+            if (lb) await patchGameState(gameName, {
+                letterbag: [...lb, ...data.recoverTiles]
+            });
+        }
+        // }
 
         socket.leave(gameName);
         const __createdtime__ = Date.now();
         // Remove user from memory
-        players = leaveGame(socket.id, players);
-        // console.log(allUsers)
+        players = leaveGame(username, gameName, players);
+
         socket.to(gameName).emit('ingame_players', players);
         socket.to(gameName).emit('receive_message', {
             username: CHAT_BOT,
             message: `${username} has left the chat`,
             __createdtime__,
         });
+
         // console.log(`${username} has left the chat`);
     });
 
     socket.on('disconnect', () => {
         // console.log('User disconnected from the chat');
         const user = players.find((user) => user.id == socket.id);
+
         if (user?.username) {
-            players = leaveGame(socket.id, players);
+            players = leaveGameBySocketId(socket.id, players);
             socket.to(user.game).emit('ingame_players', players);
             socket.to(user.game).emit('receive_message', {
                 message: `${user.username} has disconnected from the chat.`,
@@ -233,11 +263,14 @@ io.on('connection', (socket: Socket) => {
 
         let all_verified: boolean[] = [];
 
+        if (data.words[0][0].length == 1)
+            all_verified.push(false);
+
         if (data.game.lang == ELangs.sheng) {
             // https://lughayangu.com/sheng
             // https://kenyanmagazine.co.ke/200-sheng-words-and-their-meanings/
             for (const word of data.words) {
-                console.log(word)
+                // console.log(word)
 
                 let isword = shengTrie.search(word[0]);
 
@@ -288,20 +321,22 @@ io.on('connection', (socket: Socket) => {
             let cp = gamestate[0]?.currentplayer;
             let prevIdx: number = 0;
 
-            players.forEach((p, i) => {
+            let ingameplayers = players.filter(p => p.game == data.game.name);
+
+            ingameplayers.forEach((p, i) => {
                 if (p.username == cp)
                     prevIdx = i
             });
 
-            let nextIdx = players.length > 1 ? (prevIdx + 1) : 0;
-            nextIdx = nextIdx >= players.length ? 0 : nextIdx;
+            let nextIdx = ingameplayers.length > 1 ? (prevIdx + 1) : 0;
+            nextIdx = nextIdx >= ingameplayers.length ? 0 : nextIdx;
 
-            let nextplayer = players[nextIdx].username;
+            let nextplayer = ingameplayers[nextIdx].username;
 
             //save gamestate to db
             let gstateStr: string | null = gamestate[0].statistics;
             let gstate: TStats = {}
-            let le_user = data.username.charAt(0).toUpperCase() + data.username.slice(1).toLowerCase();
+            let le_user = data.username;
 
             if (gstateStr != null) {
                 gstate = JSON.parse(gstateStr);
@@ -344,6 +379,11 @@ io.on('connection', (socket: Socket) => {
                 currentplayer: nextplayer
             });
 
+            //update temp tiles to ensure cannot recover played tiles
+            if (data?.recoverTiles){
+                tempPlayerTileData[le_user] = data.recoverTiles;
+            }
+
             io.to(data.game.name).emit('current_player', nextplayer);
 
             socket.to(data.game.name).emit('words_submitted', {
@@ -375,25 +415,50 @@ io.on('connection', (socket: Socket) => {
 
     });
 
-    socket.on('return_tiles', async (data) => {
-        // console.log(data)
+    socket.on('pass_me', async data => {
 
         let gamestate = await getGameState(data.game.name);
-        let tiles = gamestate[0]?.letterbag;
+        let cp = gamestate[0]?.currentplayer;
+        let prevIdx: number = 0;
+        let ingameplayers = players.filter(p => p.game == data.game.name)
 
-        if (tiles)
-            tiles = [
-                ...tiles,
-                ...data.tiles.map((t: any) => t.letter)
-            ];
-        else
-            tiles = data.tiles.map((t: any) => t.letter);
-
-        await patchGameState(data.game.name, {
-            letterbag: tiles
+        ingameplayers.forEach((p, i) => {
+            if (p.username == cp)
+                prevIdx = i
         });
 
+        let nextIdx = ingameplayers.length > 1 ? (prevIdx + 1) : 0;
+        nextIdx = nextIdx >= ingameplayers.length ? 0 : nextIdx;
+
+        let nextplayer = ingameplayers[nextIdx].username;
+
+        await patchGameState(data.game.name, {
+            currentplayer: nextplayer
+        });
+
+        io.to(data.game.name).emit('current_player', nextplayer);
+
     });
+
+    // socket.on('return_tiles', async (data) => {
+    //     // console.log(data)
+
+    //     let gamestate = await getGameState(data.game.name);
+    //     let tiles = gamestate[0]?.letterbag;
+
+    //     if (tiles)
+    //         tiles = [
+    //             ...tiles,
+    //             ...data.tiles.map((t: any) => t.letter)
+    //         ];
+    //     else
+    //         tiles = data.tiles.map((t: any) => t.letter);
+
+    //     await patchGameState(data.game.name, {
+    //         letterbag: tiles
+    //     });
+
+    // });
 
 });
 

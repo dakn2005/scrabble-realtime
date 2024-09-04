@@ -11,7 +11,7 @@
       document.getElementById("chats-container").scrollTop = document.getElementById("chats-container")?.scrollHeight;
   });
 
-  // $: if ($socket){
+  // // $: if ($socket){
   //   $socket.on("receive_message", (data) => {  
   //     $messages = [
   //       ...$messages,
@@ -25,7 +25,7 @@
   //     if (document.getElementById("chats-container")) 
   //       document.getElementById("chats-container").scrollTop = document.getElementById("chats-container")?.scrollHeight;
   //   });
-  // }
+  // // }
   
 
   // $socket.on("all_msgs", (allMsgs) => {
