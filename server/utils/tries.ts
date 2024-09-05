@@ -40,15 +40,18 @@ export default class Trie {
 
     #searchAbstract(word: string, root: TrieNode): boolean {
         let node: TrieNode = root
+        let found: boolean = false;
 
         word.split('').forEach(element => {
             if (node.children.get(element))
                 node = node.children.get(element) as TrieNode
+                if (node.end)
+                    found = true;
             else
-                return false
+                found = false;
         });
 
-        return node.end;
+        return found;
     }
 
     search(word: string): boolean {

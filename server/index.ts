@@ -150,11 +150,11 @@ io.on('connection', (socket: Socket) => {
 
         // console.log(gamePlayers);
         io.to(gameName).emit('ingame_players', gamePlayers);
-        
+
         //set current player
         let currentPlayer, tiledata, wordsdata;
         let gs: IGameStateTable[] = await getGameState(game.name);
-        
+
         if (gamePlayers.length == 1) {
             currentPlayer = username
             tiledata = await getTiles(game, 7, gs);
@@ -168,18 +168,18 @@ io.on('connection', (socket: Socket) => {
         wordsdata = Object.keys(stats).map(k => stats[k].map((s: TPlayerData) => s.words)) ?? [];
         wordsdata = flatten(wordsdata);
 
-
         socket.emit('current_player', currentPlayer);
 
         socket.emit('init_gamestate', { tiledata, wordsdata });
 
         // console.log(currentPlayer, tiledata, gamePlayers);
-        
+
         tempPlayerTileData = {
-            [currentPlayer]: tiledata?.tiles,
+            [username]: tiledata?.tiles,
         }
 
-        console.log('joining', currentPlayer, tempPlayerTileData);
+        // console.log('joining', username, tempPlayerTileData);
+        // console.log(players);
 
         // (async () => {
         //     let all_msgs = await readMessages(game);
@@ -215,18 +215,28 @@ io.on('connection', (socket: Socket) => {
             let gs: IGameStateTable[] = await getGameState(gameName);
             let lb = gs[0].letterbag;
 
-            if (lb) await patchGameState(gameName, {
-                letterbag: [...lb, ...temptiles]
-            });
+
+            if (lb) {
+                // console.log('no recovertile', [...lb, ...temptiles]);
+
+                await patchGameState(gameName, {
+                    letterbag: [...lb, ...temptiles]
+                });
+            }
 
             delete tempPlayerTileData[username];
         } else if (data?.recoverTiles) {
             let gs: IGameStateTable[] = await getGameState(gameName);
             let lb = gs[0].letterbag;
 
-            if (lb) await patchGameState(gameName, {
-                letterbag: [...lb, ...data.recoverTiles]
-            });
+
+            if (lb) {
+                // console.log('recovertile', [...lb, ...data.recoverTiles])
+
+                await patchGameState(gameName, {
+                    letterbag: [...lb, ...data.recoverTiles]
+                });
+            }
         }
         // }
 
@@ -243,6 +253,7 @@ io.on('connection', (socket: Socket) => {
         });
 
         // console.log(`${username} has left the chat`);
+        // console.log(players)
     });
 
     socket.on('disconnect', () => {
@@ -310,8 +321,7 @@ io.on('connection', (socket: Socket) => {
                 //     })()
                 // }
 
-                if (isword)
-                    all_verified.push(isword)
+                all_verified.push(isword)
             }
         }
 
@@ -331,6 +341,8 @@ io.on('connection', (socket: Socket) => {
             let nextIdx = ingameplayers.length > 1 ? (prevIdx + 1) : 0;
             nextIdx = nextIdx >= ingameplayers.length ? 0 : nextIdx;
 
+            console.log(ingameplayers);
+            
             let nextplayer = ingameplayers[nextIdx].username;
 
             //save gamestate to db
@@ -380,7 +392,7 @@ io.on('connection', (socket: Socket) => {
             });
 
             //update temp tiles to ensure cannot recover played tiles
-            if (data?.recoverTiles){
+            if (data?.recoverTiles) {
                 tempPlayerTileData[le_user] = data.recoverTiles;
             }
 

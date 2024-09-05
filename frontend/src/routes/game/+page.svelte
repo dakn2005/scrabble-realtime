@@ -45,7 +45,7 @@
 <!-- <button on:click={() => sideOpen = true}>Open</button> -->
 <Board />
 <!-- <label for="my-drawer" class="btn btn-primary">Side Menu</label> -->
-<Toaster richColors position="bottom-center" />
+<Toaster richColors position="bottom-center" closeButton />
 
 <Sheet.Root bind:open="{$chatsOpen}">
   <!-- <Sheet.Trigger>Open</Sheet.Trigger> -->

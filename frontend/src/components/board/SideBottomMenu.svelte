@@ -53,7 +53,7 @@
   </li>
 
   <li>
-    <button on:click="{leaveGameFunc}">
+    <button on:click={leaveGameFunc}>
       <i class="fa-solid fa-circle-xmark md:text-lg text-red-600"></i>
       <span>exit</span>
     </button>

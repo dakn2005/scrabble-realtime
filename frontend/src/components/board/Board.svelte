@@ -167,6 +167,8 @@
     calcScore();
   }
 
+   //TODO: get word when letter(s) have middle placement
+   //TODO: get from single letter placement?
   function getFullWord() {
     let theword = [],
       thewordcoords = [];
@@ -174,7 +176,7 @@
     let colarr = [],
       rowarr = [];
 
-    let invalidWordArr = [[], [], "invalid word :("];
+    let invalidWordArr = [[], [], "invalid word :( \nensure the tiles are properly set"];
 
     let wordidentifier = (letter, coord, rowwise, colwise) => {
       let lastcoords = thewordcoords.length > 0 ? thewordcoords.at(-1) : null;
@@ -198,9 +200,9 @@
         }
 
         while (wordMap.has(`${newRow},${newCol}`) && !visited.has(`${newRow},${newCol}`)) {
-          visited.add(`${newRow},${newCol}`);
-
-          if (rowwise) {
+          
+          if (rowwise && newRow == coord[0]) {
+            visited.add(`${newRow},${newCol}`);
             let visited_letter = wordMap.get(`${newRow},${newCol}`);
             proposedTotalWordScore += getLetterScore(visited_letter);
 
@@ -214,8 +216,8 @@
 
             newCol += dc;
           }
-
-          if (colwise) {
+          else if (colwise && newCol == coord[1]) {
+            visited.add(`${newRow},${newCol}`);
             let visited_letter = wordMap.get(`${newRow},${newCol}`);
             proposedTotalWordScore += getLetterScore(visited_letter);
 
@@ -228,6 +230,9 @@
             }
 
             newRow += dr;
+          }
+          else{
+            break;
           }
         }
       }
@@ -314,8 +319,9 @@
     let words = [[proposedWord, proposedWordCoords, proposedTotalWordScore]];
 
     // while (queue.length > 0) {
+      //queue.shift();
     for (let qelem of queue) {
-      let [, letter, pos] = qelem; //queue.shift();
+      let [, letter, pos,] = qelem; 
 
       // wordMap.set(`${pos[0]},${pos[1]}`, letter);
 
@@ -330,7 +336,7 @@
         if (newRow < 0 || newRow >= 15 || newCol < 0 || newCol >= 15) {
           continue;
         }
-
+        // TODO: get word when letter(s) have middle placement
         while (wordMap.has(`${newRow},${newCol}`) && !visited.has(`${newRow},${newCol}`) && !newlyVisited.has(`${newRow},${newCol}`)) {
           let letter2 = wordMap.get(`${newRow},${newCol}`);
 
@@ -344,8 +350,11 @@
 
           score += getLetterScore(letter2);
 
+          visited.add(`${newRow},${newCol}`);
+
           [newRow, newCol] = [newRow + dr, newCol + dc];
         }
+
       }
 
       if (derivedWord.length > 1) words.push([derivedWord.join(""), derivedWordCoords, score]);
@@ -353,24 +362,29 @@
 
     // console.log({ words, userdetails: $userStore });
 
-    $socket.emit("submit_words", { username, game, words, recoverTiles: pickedTiles, nv: Object.fromEntries(newlyVisited) });
+    $socket.emit("submit_words", { username, game, words, recoverTiles: pickedTiles?.map(t => t.letter), nv: Object.fromEntries(newlyVisited) });
   }
 
   function pickTilesFunc() {
-    let tiles_2_pick = 7 - pickedTiles.length;
-    $socket.emit("pick_tiles", { game, tiles_2_pick });
+    if (newlyVisited.size == 0){
+      let tiles_2_pick = 7 - pickedTiles.length;
+      $socket.emit("pick_tiles", { game, tiles_2_pick });
+    }else{
+      toast.info('Already in play, can only pick tiles when not in play, or return all tiles to set');
+    }
   }
 
   function passMeFunc() {
-    $socket.emit("pass_me", { game });
+    if (confirm('Pass to next player?'))
+      $socket.emit("pass_me", { game });
   }
 
-  function leaveGameFunc() {
-      $socket.emit("leave_game", { username, gameName: game?.name, recoverTiles: pickedTiles });
+  const leaveGameFunc = () => {
+      $socket.emit("leave_game", { username, gameName: game?.name, recoverTiles: pickedTiles?.map(t => t.letter) });
       $userStore = {};
       $messages = [];
       
-      goto('/')
+      goto('/');
     }
 
   $: if (pickedTiles) {
@@ -383,9 +397,19 @@
 
     for (let { id } of pickedTiles) {
       if (Object.keys(proposedIds).includes(id)) {
-        queue.splice(proposedIds[id], 1);
+        let spliced = queue.splice(proposedIds[id], 1);
+        let pos = spliced[0][2];
+        newlyVisited.delete(`${pos[0]},${pos[1]}`);
+
+        $socket.emit("player_playing", {
+          nv: Object.fromEntries(newlyVisited),
+          game,
+        });
+
+        newlyVisited = newlyVisited;
       }
     }
+
   }
 
   $: dndOptions = {
@@ -399,43 +423,47 @@
 
   $: if ($socket == null){
     toast.warning("Issues communicating with the server");
-    $recoverTiles = pickedTiles;
+    $recoverTiles = pickedTiles?.map(t => t.letter);
     goto("/");
   }
 
   $socket?.on("words_submitted", (data) => {
-
-    console.log(data, newlyVisited);
-
+    // console.log(data, newlyVisited);
     if (data.status == "broadcast") {
       Object.entries(data.nv).forEach((nv) => {
         let [pos, l] = nv;
         wordMap.set(pos, l);
       });
 
+      // console.log(newlyVisitedBroadcast, wordMap)
+      newlyVisitedBroadcast.clear();
+      
+      newlyVisitedBroadcast = newlyVisitedBroadcast;
       wordMap = wordMap;
 
-      newlyVisitedBroadcast.clear();
     } else {
       if (data.status == "fiti") {
         newlyVisited.forEach((v, k) => {
           wordMap.set(k, v);
         });
 
-        wordMap = wordMap;
-
+        // console.log(newlyVisited, wordMap);
         queue = [];
         visited.clear();
         newlyVisited.clear();
-        toast.success("Word Accepted :-)", { duration: 4000 });
+
+        newlyVisited = newlyVisited;
+        wordMap = wordMap;
+
+        toast.success("Word Accepted :-)", { duration: 2000 });
       } else if (data.status == "chorea") {
-        toast.error("Word Not Found :-(", { duration: 4000 });
+        visited.clear();
+        toast.error("Word Not Found :-(", { duration: 2500 });
       }
 
       // playerWordSubmittedStatusCss = data.status;
     }
 
-    console.log(wordMap);
   });
 
   $socket?.on("player_playing", (data) => {
@@ -485,14 +513,16 @@
   });
 
   $socket?.on("ingame_players", (data) => {
-    gamePlayers = data;
-    // console.log("ingame_players", data);
+    if (data)
+      gamePlayers = data;
+
+    console.log("ingame_players", data);
   });
 
   $socket?.on("current_player", (player) => {
 
     currentPlayer = player;
-    toast.info(`It's ${player}'s turn`, { duration: 2000 });
+    toast.info(`It's ${player}'s turn`, { duration: 4000 });
     // console.log("current player", player, temp_1);
   });
 
@@ -522,7 +552,7 @@
       },
     ];
 
-    console.log(document.getElementById("chats-container")?.scrollHeight);
+    // console.log(document.getElementById("chats-container")?.scrollHeight);
 
     if (document.getElementById("chats-container")) {
 
@@ -572,7 +602,8 @@
         {/if}
       </div>
 
-      <SideBottomMenu isbottom="{true}" {submit} />
+      <SideBottomMenu isbottom="{true}" {setToggleSideBar} {submit} {pickTilesFunc} {passMeFunc} {leaveGameFunc} disabled="{currentPlayer?.toLowerCase() != username?.toLowerCase()}" />
+
     </div>
   </div>
 </div>
