@@ -7,6 +7,7 @@ import { Server, Socket } from 'socket.io';
 import express, { Request, Response } from 'express';
 import http from 'http';
 import cors from 'cors';
+import path from 'path';
 import 'dotenv/config';
 import flatten from 'lodash/flatten';
 
@@ -33,8 +34,11 @@ let ioCorsUrl = process.env.DEBUG ? 'http://localhost:5173' : process.env.SERVER
 // });
 
 app.get('/', (req: Request, res: Response) => {
-    res.send('Hello World!');
+    // res.send('Hello World!');
+    res.sendFile(path.join(__dirname, 'public/index.html'));
 });
+
+app.use('/', express.static(path.join(__dirname, 'public/')))
 
 app.get('/api/games', async (req: Request, res: Response) => {
     const games = await getGames();

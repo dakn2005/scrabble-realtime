@@ -1,7 +1,8 @@
 import { eq, lt, gte, ne } from 'drizzle-orm';
 import { DrizzleError } from 'drizzle-orm';
 
-import {db} from '../conn';
+// import {db} from '../conn';
+import { db } from '../db-neon';
 import { game_state, games, messages } from '../schema';
 import {IMessage, IGame, IGameStateTable} from '../../interfaces';
 

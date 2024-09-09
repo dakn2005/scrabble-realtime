@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" href="./favicon.png" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Monoton&display=swap" rel="stylesheet">
+		<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet">
+		<!-- <script src="https://cdn.jsdelivr.net/npm/theme-change@2.0.2/index.js"></script> -->
+		
+		
+		
+		<link href="./_app/immutable/assets/app.BNzJqAN-.css" rel="stylesheet">
+		<link rel="modulepreload" href="./_app/immutable/entry/start.Ca82omXS.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/entry.DGy6yyF5.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/scheduler.C1Ol98Qv.js">
+		<link rel="modulepreload" href="./_app/immutable/entry/app.u0VUt1fS.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/index.C7pQoyTu.js">
+		<link rel="modulepreload" href="./_app/immutable/nodes/0.CN8ZXt3v.js">
+		<link rel="modulepreload" href="./_app/immutable/nodes/2.DxwInl9G.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/app.DND8Z-wC.js">
+	</head>
+	<body data-sveltekit-preload-data="hover">
+		<div>   <div class="w-full" style="background-color: #fbf7f6;"><div class="card bg-slate-700 w-96 shadow-xl p-10 space-y-5 m-auto mt-48"><span class="m-auto text-4xl uppercase text-white" data-svelte-h="svelte-19gzkk1">Karibu</span> <label class="input input-bordered input-md flex items-center gap-2"><span class="text-xs text-indigo-200 italic" data-svelte-h="svelte-mkrndl">username</span> <input type="text" class="grow" placeholder="e.g. Kimana" value=""></label> <select class="select select-bordered select-md w-full max-w-xs"><option value="" data-svelte-h="svelte-7ry8ge">-- Select Game --</option></select> <button class="btn btn-neutral w-full" style="width: 100%;">Join Game
+      <span class="loading loading-spinner loading-xs invisible"></span></button> <button class="btn btn-outline btn-warning w-full" style="width: 100%;" onclick="new_game_modal.showModal()" data-svelte-h="svelte-2gb43q"><i class="fa-solid fa-plus"></i> New Game</button>  <dialog id="new_game_modal" class="modal"><div class="modal-box"><form method="dialog" data-svelte-h="svelte-9ixgud"><button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button></form> <h3 class="text-lg font-bold mb-4" data-svelte-h="svelte-1krkdrr">+ Add</h3> <label class="input input-bordered input-md flex items-center gap-2 mb-3"><span class="text-xs italic text-indigo-200" data-svelte-h="svelte-vl087v">username</span> <input type="text" class="grow" placeholder="e.g. Kimana" value=""></label> <label class="input input-bordered input-md flex items-center gap-2 mb-4"><span class="text-xs italic text-indigo-200" data-svelte-h="svelte-1e22p6m">Game Name</span> <input type="text" class="grow text-lg" placeholder="unique game name" value=""></label> <select class="select select-bordered select-md w-full mb-4"><option value="-- Select language --" data-svelte-h="svelte-1ogokao">-- Select language --</option><option value="Sheng + Swahili">Sheng + Swahili</option><option value="Swahili">Swahili</option><option value="English">English</option></select>  <form method="dialog"><button class="btn btn-primary w-full" style="width: 100%;" data-svelte-h="svelte-11ruwyt">Save</button></form></div> <form method="dialog" class="modal-backdrop" data-svelte-h="svelte-vg3lbk"><button>close</button></form></dialog></div></div> 
+			
+			<script>
+				{
+					__sveltekit_91f99s = {
+						base: new URL(".", location).pathname.slice(0, -1)
+					};
+
+					const element = document.currentScript.parentElement;
+
+					const data = [null,null];
+
+					Promise.all([
+						import("./_app/immutable/entry/start.Ca82omXS.js"),
+						import("./_app/immutable/entry/app.u0VUt1fS.js")
+					]).then(([kit, app]) => {
+						kit.start(app, element, {
+							node_ids: [0, 2],
+							data,
+							form: null,
+							error: null
+						});
+					});
+				}
+			</script>
+		</div>
+	</body>
+</html>
