@@ -10,6 +10,7 @@
     proposedWordQueue,
     items = [],
     disabled, 
+    disabledBroadcasted,
     playerWordSubmittedStatusCss;
 
   let isSpecial = false,
@@ -132,7 +133,7 @@
     <SpecialTile {tile_type} />
   {:else}
     {#each items as tile (tile.id)}
-      <Tile id="{tile.id}" letter="{tile.letter}" score="{getLetterScore(tile.letter)}" {playerWordSubmittedStatusCss} />
+      <Tile id="{tile.id}" letter="{tile.letter}" score="{getLetterScore(tile.letter)}" {playerWordSubmittedStatusCss} isDisabled={disabled && !disabledBroadcasted} />
     {/each}
   {/if}
 </div>

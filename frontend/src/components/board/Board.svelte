@@ -31,11 +31,9 @@
           $messages = [];
 
           goto("/");
-
         }, 2000);
       }
     }, 2000);
-
   });
 
   // onDestroy(() => {
@@ -167,8 +165,6 @@
     calcScore();
   }
 
-   //TODO: get word when letter(s) have middle placement
-   //TODO: get from single letter placement?
   function getFullWord() {
     let theword = [],
       thewordcoords = [];
@@ -200,7 +196,6 @@
         }
 
         while (wordMap.has(`${newRow},${newCol}`) && !visited.has(`${newRow},${newCol}`)) {
-          
           if (rowwise && newRow == coord[0]) {
             visited.add(`${newRow},${newCol}`);
             let visited_letter = wordMap.get(`${newRow},${newCol}`);
@@ -215,8 +210,7 @@
             }
 
             newCol += dc;
-          }
-          else if (colwise && newCol == coord[1]) {
+          } else if (colwise && newCol == coord[1]) {
             visited.add(`${newRow},${newCol}`);
             let visited_letter = wordMap.get(`${newRow},${newCol}`);
             proposedTotalWordScore += getLetterScore(visited_letter);
@@ -230,8 +224,7 @@
             }
 
             newRow += dr;
-          }
-          else{
+          } else {
             break;
           }
         }
@@ -304,24 +297,103 @@
   }
 
   function submit() {
+
+    let words = [];
+
+    //TODO: single digit placement
+    if (queue.length == 1) {
+      let [, letter, pos,] = queue[0];
+      let [row, col] = pos;
+      let row_upward = row - 1, row_downward = row + 1;
+      let col_backward = col - 1, col_forward = col + 1;
+      let score = proposedTotalWordScore;
+
+      let derivedWord = [letter];
+      let derivedWordCoords = [pos];
+      while (wordMap.has(`${row_upward},${col}`) || wordMap.has(`${row_downward},${col}`)){
+        let letter2 = wordMap.get(`${row_upward},${col}`);
+        if (letter2){
+          score += getLetterScore(letter2);
+          derivedWord.unshift(letter2);
+          derivedWordCoords.unshift([row_upward, col]);
+          row_upward -= 1;
+        } 
+        let letter3 = wordMap.get(`${row_downward},${col}`);
+        if (letter3){
+          score += getLetterScore(letter3);
+          derivedWord.push(letter3);
+          derivedWordCoords.push([row_downward, col]);
+          row_downward += 1;
+        }
+      }
+      if (derivedWord.length > 1) {
+        wholeWordScores.forEach(s => {
+          score *= s;
+        });
+        
+        words.push([derivedWord.join(''), derivedWordCoords, score]);
+      }
+
+      derivedWord = [letter];
+      derivedWordCoords = [pos];
+      score = proposedTotalWordScore;
+      while (wordMap.has(`${row},${col_backward}`) || wordMap.has(`${row},${col_forward}`)){
+        let letter4 = wordMap.get(`${row},${col_backward}`)
+        if (letter4){
+          score += getLetterScore(letter4);
+          derivedWord.unshift(letter4);
+          derivedWordCoords.unshift([row, col_backward]);
+          col_backward -= 1;
+        } 
+
+        let letter5 = wordMap.get(`${row},${col_forward}`);
+        if (letter5){
+          score += getLetterScore(letter5);
+          derivedWord.push(letter5);
+          derivedWordCoords.push([row, col_forward]);
+          col_forward += 1;
+        }
+
+      }
+      if (derivedWord.length > 1) {
+        wholeWordScores.forEach(s => {
+          score *= s;
+        });
+
+        words.push([derivedWord.join(''), derivedWordCoords, score]);
+      }
+        
+      console.log({ words, userdetails: $userStore });
+
+      if (words.length == 0) 
+        toast.error("Word Not Found :-(", { duration: 2500 });
+      else
+        $socket.emit("submit_words", { username, game, words, recoverTiles: pickedTiles?.map((t) => t.letter), nv: Object.fromEntries(newlyVisited) }); 
+      
+
+      return;
+    }
+
+    //* handle word extension e.g. bad n badminton
+    //TODO: Handle middle word placement after getting full word
+    let [proposedWord, proposedWordCoords, error] = getFullWord();
+    
+    if (error) {
+      toast.info(error);
+      return;
+    }
+    
     //calculate queue word score
     wholeWordScores.forEach((s) => {
       proposedTotalWordScore *= s;
     });
 
-    let [proposedWord, proposedWordCoords, error] = getFullWord();
-
-    if (error) {
-      toast.info(error);
-      return;
-    }
-
-    let words = [[proposedWord, proposedWordCoords, proposedTotalWordScore]];
+    words = [[proposedWord, proposedWordCoords, proposedTotalWordScore]];
 
     // while (queue.length > 0) {
-      //queue.shift();
+    //queue.shift();
     for (let qelem of queue) {
-      let [, letter, pos,] = qelem; 
+      let [, letter, pos,] = qelem;
 
       // wordMap.set(`${pos[0]},${pos[1]}`, letter);
 
@@ -336,7 +408,7 @@
         if (newRow < 0 || newRow >= 15 || newCol < 0 || newCol >= 15) {
           continue;
         }
-        // TODO: get word when letter(s) have middle placement
+
         while (wordMap.has(`${newRow},${newCol}`) && !visited.has(`${newRow},${newCol}`) && !newlyVisited.has(`${newRow},${newCol}`)) {
           let letter2 = wordMap.get(`${newRow},${newCol}`);
 
@@ -349,43 +421,40 @@
           }
 
           score += getLetterScore(letter2);
-
           visited.add(`${newRow},${newCol}`);
-
           [newRow, newCol] = [newRow + dr, newCol + dc];
         }
-
       }
 
-      if (derivedWord.length > 1) words.push([derivedWord.join(""), derivedWordCoords, score]);
+      if (derivedWord.length > 1) 
+        words.push([derivedWord.join(""), derivedWordCoords, score]);
     }
 
     // console.log({ words, userdetails: $userStore });
 
-    $socket.emit("submit_words", { username, game, words, recoverTiles: pickedTiles?.map(t => t.letter), nv: Object.fromEntries(newlyVisited) });
+    $socket.emit("submit_words", { username, game, words, recoverTiles: pickedTiles?.map((t) => t.letter), nv: Object.fromEntries(newlyVisited) });
   }
 
   function pickTilesFunc() {
-    if (newlyVisited.size == 0){
+    if (newlyVisited.size == 0) {
       let tiles_2_pick = 7 - pickedTiles.length;
       $socket.emit("pick_tiles", { game, tiles_2_pick });
-    }else{
-      toast.info('Already in play, can only pick tiles when not in play, or return all tiles to set');
+    } else {
+      toast.info("Already in play, can only pick tiles when not in play, or return all tiles to set");
     }
   }
 
   function passMeFunc() {
-    if (confirm('Pass to next player?'))
-      $socket.emit("pass_me", { game });
+    if (confirm("Pass to next player?")) $socket.emit("pass_me", { game });
   }
 
   const leaveGameFunc = () => {
-      $socket.emit("leave_game", { username, gameName: game?.name, recoverTiles: pickedTiles?.map(t => t.letter) });
-      $userStore = {};
-      $messages = [];
-      
-      goto('/');
-    }
+    $socket.emit("leave_game", { username, gameName: game?.name, recoverTiles: pickedTiles?.map((t) => t.letter) });
+    $userStore = {};
+    $messages = [];
+
+    goto("/");
+  };
 
   $: if (pickedTiles) {
     // check whether id is in both pickedletters and queue, delete if so
@@ -409,7 +478,6 @@
         newlyVisited = newlyVisited;
       }
     }
-
   }
 
   $: dndOptions = {
@@ -421,9 +489,9 @@
 
   // $: console.log($socket)
 
-  $: if ($socket == null){
+  $: if ($socket == null) {
     toast.warning("Issues communicating with the server");
-    $recoverTiles = pickedTiles?.map(t => t.letter);
+    $recoverTiles = pickedTiles?.map((t) => t.letter);
     goto("/");
   }
 
@@ -437,10 +505,9 @@
 
       // console.log(newlyVisitedBroadcast, wordMap)
       newlyVisitedBroadcast.clear();
-      
+
       newlyVisitedBroadcast = newlyVisitedBroadcast;
       wordMap = wordMap;
-
     } else {
       if (data.status == "fiti") {
         newlyVisited.forEach((v, k) => {
@@ -463,7 +530,6 @@
 
       // playerWordSubmittedStatusCss = data.status;
     }
-
   });
 
   $socket?.on("player_playing", (data) => {
@@ -478,7 +544,6 @@
     boardGrid = boardGrid;
   });
 
-  //TODO: socket calls multiple times - look into resolution
   $socket?.on("init_gamestate", (state) => {
     //assumption state has already been loaded
     if (pickedTiles.length > 0) return;
@@ -513,14 +578,12 @@
   });
 
   $socket?.on("ingame_players", (data) => {
-    if (data)
-      gamePlayers = data;
+    if (data) gamePlayers = data;
 
     console.log("ingame_players", data);
   });
 
   $socket?.on("current_player", (player) => {
-
     currentPlayer = player;
     toast.info(`It's ${player}'s turn`, { duration: 4000 });
     // console.log("current player", player, temp_1);
@@ -542,7 +605,6 @@
   });
 
   $socket?.on("receive_message", (data) => {
-
     $messages = [
       ...$messages,
       {
@@ -555,7 +617,6 @@
     // console.log(document.getElementById("chats-container")?.scrollHeight);
 
     if (document.getElementById("chats-container")) {
-
       document.getElementById("chats-container").scrollTop = document.getElementById("chats-container")?.scrollHeight + 150;
       document.getElementById("chats-container").scrollIntoView({ behavior: "smooth" });
     }
@@ -578,7 +639,7 @@
           <div class="board-row">
             {#each row as square}
               {#if newlyVisitedBroadcast.size > 0 && newlyVisitedBroadcast.has(`${i},${square.id}`)}
-                <Square row_id="{i}" tile_id="{square.id}" {getLetterScore} {proposedWordQueue} items="{[{ id: ulid(), letter: newlyVisitedBroadcast.get(`${i},${square.id}`) }]}" disabled="{currentPlayer?.toLowerCase() != username?.toLowerCase()}" />
+                <Square row_id="{i}" tile_id="{square.id}" {getLetterScore} {proposedWordQueue} items="{[{ id: ulid(), letter: newlyVisitedBroadcast.get(`${i},${square.id}`) }]}" disabled="{currentPlayer?.toLowerCase() != username?.toLowerCase()} " disabledBroadcasted={true} />
               {:else if wordMap.has(`${i},${square.id}`)}
                 <Square row_id="{i}" tile_id="{square.id}" {getLetterScore} {proposedWordQueue} items="{[{ id: ulid(), letter: wordMap.get(`${i},${square.id}`) }]}" disabled="{true}" />
                 <!-- {playerWordSubmittedStatusCss} -->
@@ -603,7 +664,6 @@
       </div>
 
       <SideBottomMenu isbottom="{true}" {setToggleSideBar} {submit} {pickTilesFunc} {passMeFunc} {leaveGameFunc} disabled="{currentPlayer?.toLowerCase() != username?.toLowerCase()}" />
-
     </div>
   </div>
 </div>

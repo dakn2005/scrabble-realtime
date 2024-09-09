@@ -6,7 +6,7 @@
   import { SOCKET_URL, LANGS } from "$lib/constants.js";
   import { userStore, socket, messages, recoverTiles } from "$lib/stores.js";
 
-  let username, selectedgame;
+  let username = "", selectedgame;
   let newuname = "",
     newgamename = "",
     newgame_lang,

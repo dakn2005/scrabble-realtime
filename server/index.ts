@@ -120,7 +120,7 @@ io.on('connection', (socket: Socket) => {
 
         // check if game is full
         if (players.filter(p => p.game == gameName).length == 4) {
-            socket.emit('join_reply', { status: 'fail', message: 'Game is full (max 4 players' });
+            socket.emit('join_reply', { status: 'fail', message: '- Game imejaa\n- Game is full (max 4 players' });
             return;
         }
 
@@ -206,6 +206,7 @@ io.on('connection', (socket: Socket) => {
         const { username, gameName } = data;
         // let cp = players.find((user) => user.game == gameName && user.username);
 
+        // * recover tiles
         // if (cp?.id != socket.id ) {
         let temptiles = tempPlayerTileData[username];
 
@@ -239,6 +240,8 @@ io.on('connection', (socket: Socket) => {
             }
         }
         // }
+
+        // TODO: if players remaining, assign to next player
 
         socket.leave(gameName);
         const __createdtime__ = Date.now();
@@ -307,7 +310,8 @@ io.on('connection', (socket: Socket) => {
             // if eng, use the api below
             // https://scrabblechecker.collinsdictionary.com/check/api/index.php?key=aa&isFriendly=1&nocache=1723803287116
             for (const word of data.words) {
-                console.log(word)
+
+                console.log(word, word[0])
 
                 let isword = engTrie.search(word[0]);
 

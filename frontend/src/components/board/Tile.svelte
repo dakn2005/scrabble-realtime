@@ -1,8 +1,8 @@
 <script>
-  export let id, letter, score, playerWordSubmittedStatusCss;
+  export let id, letter, score, playerWordSubmittedStatusCss, isDisabled;
 </script>
 
-<div class="square {playerWordSubmittedStatusCss}">
+<div class="square {isDisabled ? 'isdisabled' : ''}">
   <div class="letter-space no-select">
     <span class="text-2xl">{letter.toUpperCase()}</span><sub class="text-xs">{score}</sub>
   </div>
@@ -19,12 +19,8 @@
     background-color: #FFF6EB;
 	}
 
-  .fiti{
-    @apply bg-lime-400 text-white;
-  }
-
-  .chorea{
-    @apply bg-amber-400;
+  .isdisabled{
+    @apply bg-amber-100;
   }
 
 	.letter-space {

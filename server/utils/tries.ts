@@ -41,14 +41,17 @@ export default class Trie {
     #searchAbstract(word: string, root: TrieNode): boolean {
         let node: TrieNode = root
         let found: boolean = false;
+        let lgth: number = word.length;
 
-        word.split('').forEach(element => {
-            if (node.children.get(element))
+        word.split('').forEach((element, i) => {
+            if (node.children.get(element)){
                 node = node.children.get(element) as TrieNode
-                if (node.end)
+                if (node.end && (i == lgth - 1))
                     found = true;
-            else
+            }
+            else{
                 found = false;
+            }
         });
 
         return found;
