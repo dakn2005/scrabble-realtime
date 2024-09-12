@@ -13,30 +13,30 @@
 
   const { username, game } = $userStore;
 
-  onMount(() => {
+  // onMount(() => {
 
-    if (!$socket) {
-      $socket = io.connect(SOCKET_URL, { transports: ["websocket", 'polling'] }); 
+  //   if (!$socket) {
+  //     $socket = io.connect(SOCKET_URL, { transports: ["websocket", 'polling'] }); 
 
-      // rejoin room - below not working!
-      // if (username == "") {
-      //   goto('/')
-      // } else {
-      //   $socket.emit("join_game", { username, game: game.name });
-      // }
-    }
+  //     // rejoin room - below not working!
+  //     // if (username == "") {
+  //     //   goto('/')
+  //     // } else {
+  //     //   $socket.emit("join_game", { username, game: game.name });
+  //     // }
+  //   }
 
-    if (game.lang == LANGS.sheng) {
-      // * moved to backend
-      // (async () =>{
-      //   let resp = await fetch(SOCKET_URL + "/api/games/trie?lang=sheng");
-      //   let trie = await resp.json();
-      //   // console.log(trie);
-      // })()
-    }
+  //   if (game.lang == LANGS.sheng) {
+  //     // * moved to backend
+  //     // (async () =>{
+  //     //   let resp = await fetch(SOCKET_URL + "/api/games/trie?lang=sheng");
+  //     //   let trie = await resp.json();
+  //     //   // console.log(trie);
+  //     // })()
+  //   }
 
-    $messages = [];
-  });
+  //   $messages = [];
+  // });
   
 </script>
 

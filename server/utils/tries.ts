@@ -68,6 +68,7 @@ let swahiliTrie = new Trie();
 const isAlpha = (str: string) => /^[a-zA-Z]*$/gi.test(str)
 let shengLetters: string[] = []; //Set<string> = new Set();
 
+// TODO: deprecated
 let shengLetterSetter = (wrd: string) => {
     wrd.split('').forEach((element: string) => {
         if (isAlpha(element)) {
@@ -76,12 +77,42 @@ let shengLetterSetter = (wrd: string) => {
     });
 }
 
+const createLetterBag = (lettersDistribution: TLetterBag) => {
+    let letterBag: string[] = [];
+    Object.keys(lettersDistribution).forEach(key => {
+        lettersDistribution[parseInt(key)].forEach(letter => {
+            let cnter = parseInt(key)
+
+            while (cnter > 0) {
+                letterBag.push(letter)
+                cnter--
+            }
+        });
+    });
+
+    return letterBag;
+}
+
 const initShengLetterBag = () => {
-    return shuffle([...shengLetters])
+    // return shuffle([...shengLetters])
+    let lettersDistribution: TLetterBag = {
+        1: [],
+        2: [],
+        3: [],
+        4: [],
+        6: [],
+        8: ['N', 'M'],
+        9: ['O', 'I'],
+        12: ['A'],
+    }
+
+    let letterBag: string[] = createLetterBag(lettersDistribution);
+
+    //random picking
+    return shuffle(letterBag);    
 }
 
 const initEnLetterBag = (): string[] => {
-    let letterBag: string[] = [];
 
     let lettersDistribution: TLetterBag = {
         1: ['J', 'K', 'Q', 'X', 'Z'],
@@ -94,16 +125,7 @@ const initEnLetterBag = (): string[] => {
         12: ['E'],
     }
 
-    Object.keys(lettersDistribution).forEach(key => {
-        lettersDistribution[parseInt(key)].forEach(letter => {
-            let cnter = parseInt(key)
-
-            while (cnter > 0) {
-                letterBag.push(letter)
-                cnter--
-            }
-        });
-    });
+    let letterBag: string[] = createLetterBag(lettersDistribution);
 
     //random picking
     return shuffle(letterBag);
