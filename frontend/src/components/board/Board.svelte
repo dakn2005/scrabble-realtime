@@ -297,7 +297,8 @@
     return colwise || rowwise ? [theword.join(""), thewordcoords, null] : invalidWordArr;
   }
 
-  let words = [], isloading=false;
+  let words = [],
+    isloading = false;
 
   function submit() {
     isloading = true;
@@ -305,24 +306,26 @@
 
     //TODO: single digit placement
     if (queue.length == 1) {
-      let [, letter, pos,] = queue[0];
+      let [, letter, pos] = queue[0];
       let [row, col] = pos;
-      let row_upward = row - 1, row_downward = row + 1;
-      let col_backward = col - 1, col_forward = col + 1;
+      let row_upward = row - 1,
+        row_downward = row + 1;
+      let col_backward = col - 1,
+        col_forward = col + 1;
       let score = proposedTotalWordScore;
 
       let derivedWord = [letter];
       let derivedWordCoords = [pos];
-      while (wordMap.has(`${row_upward},${col}`) || wordMap.has(`${row_downward},${col}`)){
+      while (wordMap.has(`${row_upward},${col}`) || wordMap.has(`${row_downward},${col}`)) {
         let letter2 = wordMap.get(`${row_upward},${col}`);
-        if (letter2){
+        if (letter2) {
           score += getLetterScore(letter2);
           derivedWord.unshift(letter2);
           derivedWordCoords.unshift([row_upward, col]);
           row_upward -= 1;
-        } 
+        }
         let letter3 = wordMap.get(`${row_downward},${col}`);
-        if (letter3){
+        if (letter3) {
           score += getLetterScore(letter3);
           derivedWord.push(letter3);
           derivedWordCoords.push([row_downward, col]);
@@ -330,49 +333,45 @@
         }
       }
       if (derivedWord.length > 1) {
-        wholeWordScores.forEach(s => {
+        wholeWordScores.forEach((s) => {
           score *= s;
         });
-        
-        words.push([derivedWord.join(''), derivedWordCoords, score]);
+
+        words.push([derivedWord.join(""), derivedWordCoords, score]);
       }
 
       derivedWord = [letter];
       derivedWordCoords = [pos];
       score = proposedTotalWordScore;
-      while (wordMap.has(`${row},${col_backward}`) || wordMap.has(`${row},${col_forward}`)){
-        let letter4 = wordMap.get(`${row},${col_backward}`)
-        if (letter4){
+      while (wordMap.has(`${row},${col_backward}`) || wordMap.has(`${row},${col_forward}`)) {
+        let letter4 = wordMap.get(`${row},${col_backward}`);
+        if (letter4) {
           score += getLetterScore(letter4);
           derivedWord.unshift(letter4);
           derivedWordCoords.unshift([row, col_backward]);
           col_backward -= 1;
-        } 
+        }
 
         let letter5 = wordMap.get(`${row},${col_forward}`);
-        if (letter5){
+        if (letter5) {
           score += getLetterScore(letter5);
           derivedWord.push(letter5);
           derivedWordCoords.push([row, col_forward]);
           col_forward += 1;
         }
-
       }
       if (derivedWord.length > 1) {
-        wholeWordScores.forEach(s => {
+        wholeWordScores.forEach((s) => {
           score *= s;
         });
 
-        words.push([derivedWord.join(''), derivedWordCoords, score]);
+        words.push([derivedWord.join(""), derivedWordCoords, score]);
       }
-        
+
       // console.log({ words, userdetails: $userStore });
 
-      if (words.length == 0) 
-        toast.error("Word Not Found :-(", { duration: 2500 });
-      else
-        $socket.emit("submit_words", { username, game, words, recoverTiles: pickedTiles?.map((t) => t.letter), nv: Object.fromEntries(newlyVisited) }); 
-      
+      if (words.length == 0) toast.error("Word Not Found :-(", { duration: 2500 });
+      else $socket.emit("submit_words", { username, game, words, recoverTiles: pickedTiles?.map((t) => t.letter), nv: Object.fromEntries(newlyVisited) });
 
       return;
     }
@@ -380,12 +379,12 @@
     //* handle word extension e.g. bad n badminton
     //TODO: Handle middle word placement after getting full word
     let [proposedWord, proposedWordCoords, error] = getFullWord();
-    
+
     if (error) {
       toast.info(error);
       return;
     }
-    
+
     //calculate queue word score
     wholeWordScores.forEach((s) => {
       proposedTotalWordScore *= s;
@@ -396,7 +395,7 @@
     // while (queue.length > 0) {
     //queue.shift();
     for (let qelem of queue) {
-      let [, letter, pos,] = qelem;
+      let [, letter, pos] = qelem;
 
       // wordMap.set(`${pos[0]},${pos[1]}`, letter);
 
@@ -429,8 +428,7 @@
         }
       }
 
-      if (derivedWord.length > 1) 
-        words.push([derivedWord.join(""), derivedWordCoords, score]);
+      if (derivedWord.length > 1) words.push([derivedWord.join(""), derivedWordCoords, score]);
     }
 
     // console.log({ words, userdetails: $userStore });
@@ -439,6 +437,7 @@
   }
 
   function pickTilesFunc() {
+    // console.log("picking tiles", newlyVisited);
     if (newlyVisited.size == 0) {
       let tiles_2_pick = 7 - pickedTiles.length;
       $socket.emit("pick_tiles", { game, tiles_2_pick });
@@ -452,14 +451,13 @@
   }
 
   const leaveGameFunc = () => {
-    if (confirm('Leave game?')){
+    if (confirm("Leave game?")) {
       $socket.emit("leave_game", { username, gameName: game?.name, recoverTiles: pickedTiles?.map((t) => t.letter) });
       $userStore = {};
       $messages = [];
 
       goto("/");
     }
-
   };
 
   $: if (pickedTiles) {
@@ -536,9 +534,9 @@
           {
             player: username,
             masaa: new Date(),
-            wordscore: words.map(w => [w[0], w[2]])
-          }
-        ]
+            wordscore: words.map((w) => [w[0], w[2]]),
+          },
+        ];
 
         toast.success("Word Accepted :-)", { duration: 2000 });
       } else if (data.status == "chorea") {
@@ -548,6 +546,9 @@
 
       // playerWordSubmittedStatusCss = data.status;
     }
+
+    if (document.getElementById("hist-container")) 
+      document.getElementById("hist-container").scrollTop = document.getElementById("hist-container")?.scrollHeight;
   });
 
   $socket?.on("player_playing", (data) => {
@@ -644,7 +645,6 @@
     }
     // }, 1000);
   });
-
 </script>
 
 <IndeterminateProgressBar {isloading} />
@@ -663,7 +663,14 @@
           <div class="board-row">
             {#each row as square}
               {#if newlyVisitedBroadcast.size > 0 && newlyVisitedBroadcast.has(`${i},${square.id}`)}
-                <Square row_id="{i}" tile_id="{square.id}" {getLetterScore} {proposedWordQueue} items="{[{ id: ulid(), letter: newlyVisitedBroadcast.get(`${i},${square.id}`) }]}" disabled="{currentPlayer?.toLowerCase() != username?.toLowerCase()} " disabledBroadcasted={true} />
+                <Square
+                  row_id="{i}"
+                  tile_id="{square.id}"
+                  {getLetterScore}
+                  {proposedWordQueue}
+                  items="{[{ id: ulid(), letter: newlyVisitedBroadcast.get(`${i},${square.id}`) }]}"
+                  disabled="{currentPlayer?.toLowerCase() != username?.toLowerCase()} "
+                  disabledBroadcasted="{true}" />
               {:else if wordMap.has(`${i},${square.id}`)}
                 <Square row_id="{i}" tile_id="{square.id}" {getLetterScore} {proposedWordQueue} items="{[{ id: ulid(), letter: wordMap.get(`${i},${square.id}`) }]}" disabled="{true}" />
                 <!-- {playerWordSubmittedStatusCss} -->
@@ -690,7 +697,6 @@
       <SideBottomMenu isbottom="{true}" {setToggleSideBar} {submit} {pickTilesFunc} {passMeFunc} {leaveGameFunc} disabled="{currentPlayer?.toLowerCase() != username?.toLowerCase()}" />
     </div>
   </div>
-  
 </div>
 <!-- <FloatingBtn /> -->
 
@@ -721,7 +727,7 @@
             <span class="border-t-4 rounded w-1/2 text-xs mr-3 p-1 {player.username == currentPlayer ? 'border-green-400 bg-green-300' : 'border-slate-400 bg-slate-200'}">
               {player.username}
               {player.username.toLowerCase() == username.toLowerCase() ? "(you)" : ""}
-              <div class="badge">{0}</div>
+              <div class="badge">{player.score}</div>
             </span>
           {/each}
         </div>
@@ -732,9 +738,13 @@
         <span>tiles left</span>
       </div>
 
-      <!-- <div class="w-full md:w-1/3 text-center mb-4 md:mb-0"> -->
+      <div class="w-full md:w-1/3 text-center mb-4 md:mb-0">
         <!-- <ScoreChart /> -->
-      <!-- </div> -->
+        <a href="https://buymeacoffee.com/dakn2005" target="_blank" class="text-white pacifico-regular btn bg-amber-400 hover:bg-amber-600">
+          <i class="fa-solid fa-mug-hot"></i>
+          buy me a coffee
+        </a>
+      </div>
     </div>
 
     <Drawer.Footer>
@@ -742,9 +752,6 @@
     </Drawer.Footer>
   </Drawer.Content>
 </Drawer.Root>
-
-
-
 
 <style>
   :global(body *) {
@@ -802,5 +809,18 @@
   }
   .rack > * {
     margin: 2px;
+  }
+
+  .pacifico-regular {
+    font-family: "Pacifico", cursive;
+    font-weight: 400;
+    font-style: normal;
+  }
+
+  .playwrite-cuba {
+    font-family: "Playwrite CU", cursive;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
   }
 </style>

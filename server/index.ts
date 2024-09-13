@@ -169,17 +169,39 @@ io.on('connection', (socket: Socket) => {
         wordsdata = Object.keys(stats).map(k => stats[k].map((s: TPlayerData) => s.words)) ?? [];
         wordsdata = flatten(wordsdata);
 
-        history = Object.keys(stats).map(k => stats[k].map((s: TPlayerData)=>{
-                return{
+        history = Object.keys(stats).map(k => {
+            let mchezaji: IUser = gamePlayers.find(u => u.username == k) as IUser;
+            let prevScore = 0;
+
+            let to_return = stats[k].map((s: TPlayerData) => {
+                let wsarr = s.words.map(w => [w[0], w[2]]);
+                let playerScore = s.words.reduce((a, b) => a + b[2], 0);
+
+                if (mchezaji) {
+                    prevScore += playerScore
+                }
+
+                return {
                     player: k,
                     masaa: s.timestamp,
-                    wordscore: s.words.map(w => [w[0], w[2]])
+                    wordscore: wsarr
                 }
-            }));
+            });
+
+            if (mchezaji){
+                mchezaji.score = prevScore;
+
+                if (!gamePlayers.includes(mchezaji))
+                    gamePlayers = [...gamePlayers, mchezaji];
+            }
+
+            return to_return;
+        });
 
         history = flatten(history);
 
         // console.log(gamePlayers);
+
         io.to(gameName).emit('ingame_players', gamePlayers);
 
         socket.emit('current_player', currentPlayer);
@@ -363,7 +385,7 @@ io.on('connection', (socket: Socket) => {
             nextIdx = nextIdx >= ingameplayers.length ? 0 : nextIdx;
 
             // console.log(ingameplayers);
-            
+
             let nextplayer = ingameplayers[nextIdx].username;
 
             //save gamestate to db
@@ -408,15 +430,37 @@ io.on('connection', (socket: Socket) => {
             }
 
             let history;
+            let gamePlayers = players.filter((user) => user?.game === data.game.name);
 
-            history = Object.keys(gstate).map(k => gstate[k].map((s: TPlayerData)=>{
-                    return{
+            history = Object.keys(gstate).map(k => {
+                let mchezaji: IUser = gamePlayers.find(u => u.username == k) as IUser;
+                let prevScore = 0;
+    
+                let to_return = gstate[k].map((s: TPlayerData) => {
+                    let wsarr = s.words.map(w => [w[0], w[2]]);
+                    let playerScore = s.words.reduce((a, b) => a + b[2], 0);
+    
+                    if (mchezaji) {
+                        prevScore += playerScore
+                    }
+    
+                    return {
                         player: k,
                         masaa: s.timestamp,
-                        wordscore: s.words.map(w => [w[0], w[2]])
+                        wordscore: wsarr
                     }
-                }));
-
+                });
+    
+                if (mchezaji){
+                    mchezaji.score = prevScore;
+    
+                    if (!gamePlayers.includes(mchezaji))
+                        gamePlayers = [...gamePlayers, mchezaji];
+                }
+    
+                return to_return;
+            });
+    
             history = flatten(history);
 
             await patchGameState(data.game.name, {
@@ -426,10 +470,12 @@ io.on('connection', (socket: Socket) => {
 
             //update temp tiles to ensure cannot recover played tiles
             if (data?.recoverTiles) {
-                tempPlayerTileData[`${le_user}-${data.game.name}`] = data.recoverTiles;
+                tempPlayerTileData[`${le_user}_${data.game.name}`] = data.recoverTiles;
             }
 
             io.to(data.game.name).emit('current_player', nextplayer);
+
+            io.to(data.game.name).emit('ingame_players', gamePlayers);
 
             socket.to(data.game.name).emit('words_submitted', {
                 nv: data.nv,

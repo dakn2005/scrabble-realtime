@@ -1,14 +1,13 @@
 <script>
-  import { onMount } from "svelte";
   import daysjs from "dayjs";
 
   import { history } from "$lib/stores.js";
 
-  onMount(() => {
-    if (document.getElementById("hist-container")) document.getElementById("hist-container").scrollTop = document.getElementById("hist-container")?.scrollHeight;
-  });
 
-  // $: console.log($history) 
+  $: if ($history){
+    if (document.getElementById("hist-container")) 
+      document.getElementById("hist-container").scrollTop = document.getElementById("hist-container")?.scrollHeight;
+  }
 </script>
 
 <div id="hist-container" style="max-height: 80vh; overflow: scroll;">
