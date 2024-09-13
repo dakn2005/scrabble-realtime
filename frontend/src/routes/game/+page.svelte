@@ -57,8 +57,8 @@
       <!-- <Sheet.Description>This action cannot be undone. This will permanently delete your account and remove your data from our servers.</Sheet.Description> -->
     <!-- </Sheet.Header> -->
 
-    <Tabs.Root value="account" class="w-full">
-      <Tabs.List>
+    <Tabs.Root value="chatting" class="w-full">
+      <Tabs.List class="w-full">
         <Tabs.Trigger value="chatting">Chats</Tabs.Trigger>
         <Tabs.Trigger value="historia">Turn History</Tabs.Trigger>
       </Tabs.List>

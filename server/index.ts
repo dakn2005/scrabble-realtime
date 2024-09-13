@@ -177,6 +177,8 @@ io.on('connection', (socket: Socket) => {
                 }
             }));
 
+        history = flatten(history);
+
         // console.log(gamePlayers);
         io.to(gameName).emit('ingame_players', gamePlayers);
 
@@ -316,8 +318,8 @@ io.on('connection', (socket: Socket) => {
                     // })()
                 }
 
-                if (isword)
-                    all_verified.push(isword)
+                all_verified.push(isword);
+
             }
         }
 
@@ -326,7 +328,7 @@ io.on('connection', (socket: Socket) => {
             // https://scrabblechecker.collinsdictionary.com/check/api/index.php?key=aa&isFriendly=1&nocache=1723803287116
             for (const word of data.words) {
 
-                console.log(word, word[0])
+                // console.log(word, word[0])
 
                 let isword = engTrie.search(word[0]);
 
@@ -344,7 +346,7 @@ io.on('connection', (socket: Socket) => {
             }
         }
 
-        if (all_verified.every(v => v == true)) {
+        if (all_verified.length > 0 && all_verified.every(v => v == true)) {
             // change player turn
             let gamestate = await getGameState(data.game.name);
             let cp = gamestate[0]?.currentplayer;
@@ -360,7 +362,7 @@ io.on('connection', (socket: Socket) => {
             let nextIdx = ingameplayers.length > 1 ? (prevIdx + 1) : 0;
             nextIdx = nextIdx >= ingameplayers.length ? 0 : nextIdx;
 
-            console.log(ingameplayers);
+            // console.log(ingameplayers);
             
             let nextplayer = ingameplayers[nextIdx].username;
 
@@ -405,13 +407,17 @@ io.on('connection', (socket: Socket) => {
                 }
             }
 
-            let history = Object.keys(gstate).map(k => gstate[k].map((s: TPlayerData)=>{
+            let history;
+
+            history = Object.keys(gstate).map(k => gstate[k].map((s: TPlayerData)=>{
                     return{
                         player: k,
                         masaa: s.timestamp,
                         wordscore: s.words.map(w => [w[0], w[2]])
                     }
                 }));
+
+            history = flatten(history);
 
             await patchGameState(data.game.name, {
                 statistics: JSON.stringify(gstate),

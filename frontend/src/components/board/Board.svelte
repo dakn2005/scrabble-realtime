@@ -452,11 +452,14 @@
   }
 
   const leaveGameFunc = () => {
-    $socket.emit("leave_game", { username, gameName: game?.name, recoverTiles: pickedTiles?.map((t) => t.letter) });
-    $userStore = {};
-    $messages = [];
+    if (confirm('Leave game?')){
+      $socket.emit("leave_game", { username, gameName: game?.name, recoverTiles: pickedTiles?.map((t) => t.letter) });
+      $userStore = {};
+      $messages = [];
 
-    goto("/");
+      goto("/");
+    }
+
   };
 
   $: if (pickedTiles) {
@@ -644,6 +647,7 @@
 
 </script>
 
+<IndeterminateProgressBar {isloading} />
 <div class="game-container game-height">
   <div class="flex {!toggleSideBar ? 'flex-row' : 'flex-row-reverse'}">
     <SideBottomMenu {setToggleSideBar} {submit} {pickTilesFunc} {passMeFunc} {leaveGameFunc} disabled="{currentPlayer?.toLowerCase() != username?.toLowerCase()}" />
@@ -686,8 +690,8 @@
       <SideBottomMenu isbottom="{true}" {setToggleSideBar} {submit} {pickTilesFunc} {passMeFunc} {leaveGameFunc} disabled="{currentPlayer?.toLowerCase() != username?.toLowerCase()}" />
     </div>
   </div>
+  
 </div>
-
 <!-- <FloatingBtn /> -->
 
 <Drawer.Root bind:open="{$settingsOpen}">
@@ -739,7 +743,7 @@
   </Drawer.Content>
 </Drawer.Root>
 
-<IndeterminateProgressBar {isloading} />
+
 
 
 <style>

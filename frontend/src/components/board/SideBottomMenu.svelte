@@ -15,7 +15,7 @@
 
 <ul class="{isbottom ? 'md:invisible menu bottommenu' : 'hidden md:menu sidemenu mt-24 mb-auto'}">
   <li>
-    <button on:click="{submit}" {disabled}>
+    <button on:click="{submit}" {disabled} class="{disabled ? 'disabled' : ''}">
       <i class="fa-solid fa-upload"></i>
       <span>submit</span>
     </button>
@@ -24,7 +24,7 @@
   <!-- <div class="divider divider-horizontal"></div> -->
 
   <li>
-    <button on:click="{passMeFunc}" {disabled}>
+    <button on:click="{passMeFunc}" {disabled} class="{disabled ? 'disabled' : ''}">
       <i class="fa-solid fa-forward-step"></i>
       <span>pass</span>
     </button>
@@ -81,6 +81,10 @@
     @apply flex flex-col justify-center mt-2 mb-2 shadow-slate-200 shadow-md;
   }
 
+  ul.sidemenu > li > button.disabled {
+    @apply flex flex-col justify-center mt-2 mb-2 shadow-slate-200 shadow-md bg-slate-200 cursor-default;
+  }
+
   ul.sidemenu > li > button > span {
     font-size: 9.5px;
   }
@@ -91,6 +95,11 @@
 
   ul.bottommenu > li > button {
     @apply flex flex-row-reverse p-2;
+    font-size: 9.5px;
+  }
+
+  ul.bottommenu > li > button.disabled {
+    @apply flex flex-row-reverse p-2 bg-slate-200 cursor-default;
     font-size: 9.5px;
   }
 

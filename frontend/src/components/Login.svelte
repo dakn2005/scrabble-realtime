@@ -121,7 +121,9 @@
     <span class="m-auto text-4xl uppercase text-white">Karibu</span>
 
     <label class="input input-bordered input-md flex items-center gap-2">
-      <span class="text-xs text-amber-400 italic"> username</span>
+      <span class="text-xs text-amber-400 italic">
+        <i class="fa-regular fa-user"></i>
+      </span>
       <input type="text" class="grow" placeholder="e.g. Kimana" bind:value="{username}" />
     </label>
 

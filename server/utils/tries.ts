@@ -142,7 +142,7 @@ let enLettersScores: TLetterBag = {
 
   let swaShengLettersScores: TLetterBag = {
     1: ['A', 'O', 'I', 'N', 'M','E'],
-    2: ['U', 'C', 'H', 'D'],
+    2: ['U', 'C', 'H', 'D', 'L'],
     3: ['K', 'R', 'B', 'W'],
     4: ['F','P', 'S'],
     5: ['G', 'T'],
