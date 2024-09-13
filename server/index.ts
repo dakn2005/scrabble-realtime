@@ -11,11 +11,11 @@ import path from 'path';
 import 'dotenv/config';
 import flatten from 'lodash/flatten';
 
-import { IUser, ELangs, IGameStateTable, IGame, TStats, TPlayerData, TTempTiles } from './interfaces'
+import { IUser, ELangs, IGameStateTable, IGame, TStats, TPlayerData, TTempTiles, TLetterBag } from './interfaces'
 import { getGames, createGame, upsertGameState, patchGameState, getGameState } from './database/services/crud';
 import { leaveGame, leaveGameBySocketId } from './utils/leave-game';
 import errorHandling from './utils/errorHandling';
-import { shengTrie, engTrie, swahiliTrie, initShengLetterBag, initEnLetterBag } from './utils/tries';
+import { shengTrie, engTrie, swahiliTrie, initShengSwaLetterBag, initEnLetterBag, enLettersScores, swaShengLettersScores } from './utils/tries';
 
 let app = express();
 
@@ -92,8 +92,8 @@ const getTiles = async (game: IGame, tiles_2_pick: number, incoming_gamestate?: 
 
     let lb: string[] | undefined | null;
 
-    if (game.lang == ELangs.sheng)
-        lb = gamestate.length == 0 ? initShengLetterBag() : gamestate[0].letterbag;
+    if (game.lang == ELangs.sheng || game.lang == ELangs.swa)
+        lb = gamestate.length == 0 ? initShengSwaLetterBag() : gamestate[0].letterbag;
     else //if (game.lang == ELangs.en)
         lb = gamestate.length == 0 ? initEnLetterBag() : gamestate[0].letterbag;
 
@@ -149,14 +149,11 @@ io.on('connection', (socket: Socket) => {
         });
 
         // Save the new user to the game
-        players.push({ id: socket.id, username, game: gameName });
+        players.push({ id: socket.id, username, game: gameName, score: 0 });
         let gamePlayers = players.filter((user) => user?.game === gameName);
 
-        // console.log(gamePlayers);
-        io.to(gameName).emit('ingame_players', gamePlayers);
-
         //set current player
-        let currentPlayer, tiledata, wordsdata;
+        let currentPlayer, tiledata, wordsdata, history;
         let gs: IGameStateTable[] = await getGameState(game.name);
 
         if (gamePlayers.length == 1) {
@@ -172,14 +169,27 @@ io.on('connection', (socket: Socket) => {
         wordsdata = Object.keys(stats).map(k => stats[k].map((s: TPlayerData) => s.words)) ?? [];
         wordsdata = flatten(wordsdata);
 
+        history = Object.keys(stats).map(k => stats[k].map((s: TPlayerData)=>{
+                return{
+                    player: k,
+                    masaa: s.timestamp,
+                    wordscore: s.words.map(w => [w[0], w[2]])
+                }
+            }));
+
+        // console.log(gamePlayers);
+        io.to(gameName).emit('ingame_players', gamePlayers);
+
         socket.emit('current_player', currentPlayer);
 
-        socket.emit('init_gamestate', { tiledata, wordsdata });
+        let lettersScores: TLetterBag = game.lang == ELangs.en ? enLettersScores : swaShengLettersScores;
+
+        socket.emit('init_gamestate', { tiledata, wordsdata, lettersScores, history });
 
         // console.log(currentPlayer, tiledata, gamePlayers);
 
         tempPlayerTileData = {
-            [username]: tiledata?.tiles,
+            [`${username}_${gameName}`]: tiledata?.tiles,
         }
 
         // console.log('joining', username, tempPlayerTileData);
@@ -212,7 +222,7 @@ io.on('connection', (socket: Socket) => {
 
         // * recover tiles
         // if (cp?.id != socket.id ) {
-        let temptiles = tempPlayerTileData[username];
+        let temptiles = tempPlayerTileData[`${username}_${gameName}`];
 
         // console.log('leaving: ', username, tempPlayerTileData, tempPlayerTileData[username])
 
@@ -229,7 +239,8 @@ io.on('connection', (socket: Socket) => {
                 });
             }
 
-            delete tempPlayerTileData[username];
+            delete tempPlayerTileData[`${username}_${gameName}`];
+
         } else if (data?.recoverTiles) {
             let gs: IGameStateTable[] = await getGameState(gameName);
             let lb = gs[0].letterbag;
@@ -394,6 +405,14 @@ io.on('connection', (socket: Socket) => {
                 }
             }
 
+            let history = Object.keys(gstate).map(k => gstate[k].map((s: TPlayerData)=>{
+                    return{
+                        player: k,
+                        masaa: s.timestamp,
+                        wordscore: s.words.map(w => [w[0], w[2]])
+                    }
+                }));
+
             await patchGameState(data.game.name, {
                 statistics: JSON.stringify(gstate),
                 currentplayer: nextplayer
@@ -401,7 +420,7 @@ io.on('connection', (socket: Socket) => {
 
             //update temp tiles to ensure cannot recover played tiles
             if (data?.recoverTiles) {
-                tempPlayerTileData[le_user] = data.recoverTiles;
+                tempPlayerTileData[`${le_user}-${data.game.name}`] = data.recoverTiles;
             }
 
             io.to(data.game.name).emit('current_player', nextplayer);
@@ -409,6 +428,7 @@ io.on('connection', (socket: Socket) => {
             socket.to(data.game.name).emit('words_submitted', {
                 nv: data.nv,
                 status: 'broadcast',
+                history,
             });
 
         }

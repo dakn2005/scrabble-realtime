@@ -13,10 +13,11 @@
   import Square from "./Square.svelte";
   import SideBottomMenu from "./SideBottomMenu.svelte";
   import ScoreChart from "./ScoreChart.svelte";
-  import FloatingBtn from "./FloatingBtn.svelte";
+  import FloatingBtn from "$components/general/FloatingBtn.svelte";
+  import IndeterminateProgressBar from "$components/general/IndeterminateProgressBar.svelte";
   // import Queue from "$lib/queue.js";
 
-  import { socket, userStore, messages, settingsOpen, recoverTiles } from "$lib/stores.js";
+  import { socket, userStore, messages, settingsOpen, recoverTiles, history } from "$lib/stores.js";
 
   onMount(() => {
     setTimeout(() => {
@@ -66,13 +67,13 @@
   let toggleSideBar = false;
 
   let lettersScores = {
-    1: ["A", "E", "I", "O", "U", "L", "N", "S", "T", "R"],
-    2: ["D", "G"],
-    3: ["B", "C", "M", "P"],
-    4: ["F", "H", "V", "W", "Y"],
-    5: ["K"],
-    8: ["J", "X"],
-    10: ["Q", "Z"],
+    // 1: ["A", "E", "I", "O", "U", "L", "N", "S", "T", "R"],
+    // 2: ["D", "G"],
+    // 3: ["B", "C", "M", "P"],
+    // 4: ["F", "H", "V", "W", "Y"],
+    // 5: ["K"],
+    // 8: ["J", "X"],
+    // 10: ["Q", "Z"],
   };
 
   let directions = [
@@ -296,9 +297,11 @@
     return colwise || rowwise ? [theword.join(""), thewordcoords, null] : invalidWordArr;
   }
 
-  function submit() {
+  let words = [], isloading=false;
 
-    let words = [];
+  function submit() {
+    isloading = true;
+    words = [];
 
     //TODO: single digit placement
     if (queue.length == 1) {
@@ -363,7 +366,7 @@
         words.push([derivedWord.join(''), derivedWordCoords, score]);
       }
         
-      console.log({ words, userdetails: $userStore });
+      // console.log({ words, userdetails: $userStore });
 
       if (words.length == 0) 
         toast.error("Word Not Found :-(", { duration: 2500 });
@@ -497,6 +500,8 @@
 
   $socket?.on("words_submitted", (data) => {
     // console.log(data, newlyVisited);
+    isloading = false;
+
     if (data.status == "broadcast") {
       Object.entries(data.nv).forEach((nv) => {
         let [pos, l] = nv;
@@ -508,6 +513,7 @@
 
       newlyVisitedBroadcast = newlyVisitedBroadcast;
       wordMap = wordMap;
+      $history = data.history;
     } else {
       if (data.status == "fiti") {
         newlyVisited.forEach((v, k) => {
@@ -521,6 +527,15 @@
 
         newlyVisited = newlyVisited;
         wordMap = wordMap;
+
+        $history = [
+          ...$history,
+          {
+            player: username,
+            masaa: new Date(),
+            wordscore: words.map(w => [w[0], w[2]])
+          }
+        ]
 
         toast.success("Word Accepted :-)", { duration: 2000 });
       } else if (data.status == "chorea") {
@@ -572,6 +587,10 @@
 
     wordMap = wordMap;
 
+    lettersScores = state.lettersScores;
+
+    $history = state.history;
+
     // console.log(state)
     // console.log(pickedTiles)
     // console.log(wordMap);
@@ -580,7 +599,7 @@
   $socket?.on("ingame_players", (data) => {
     if (data) gamePlayers = data;
 
-    console.log("ingame_players", data);
+    // console.log("ingame_players", data);
   });
 
   $socket?.on("current_player", (player) => {
@@ -622,6 +641,7 @@
     }
     // }, 1000);
   });
+
 </script>
 
 <div class="game-container game-height">
@@ -668,7 +688,7 @@
   </div>
 </div>
 
-<FloatingBtn />
+<!-- <FloatingBtn /> -->
 
 <Drawer.Root bind:open="{$settingsOpen}">
   <!-- <Drawer.Trigger></Drawer.Trigger> -->
@@ -708,9 +728,9 @@
         <span>tiles left</span>
       </div>
 
-      <div class="w-full md:w-1/3 text-center mb-4 md:mb-0">
-        <ScoreChart />
-      </div>
+      <!-- <div class="w-full md:w-1/3 text-center mb-4 md:mb-0"> -->
+        <!-- <ScoreChart /> -->
+      <!-- </div> -->
     </div>
 
     <Drawer.Footer>
@@ -718,6 +738,9 @@
     </Drawer.Footer>
   </Drawer.Content>
 </Drawer.Root>
+
+<IndeterminateProgressBar {isloading} />
+
 
 <style>
   :global(body *) {

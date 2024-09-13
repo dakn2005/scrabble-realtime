@@ -93,15 +93,14 @@ const createLetterBag = (lettersDistribution: TLetterBag) => {
     return letterBag;
 }
 
-const initShengLetterBag = () => {
+const initShengSwaLetterBag = () => {
     // return shuffle([...shengLetters])
     let lettersDistribution: TLetterBag = {
-        1: [],
-        2: [],
-        3: [],
-        4: [],
-        6: [],
-        8: ['N', 'M'],
+        2: ['Y', 'V'],
+        3: ['G', 'B', 'L', 'T', 'S', 'W'],
+        4: ['K', 'R', 'F', 'P'],
+        6: ['U', 'C', 'H', 'D'],
+        8: ['N', 'M', 'E'],
         9: ['O', 'I'],
         12: ['A'],
     }
@@ -130,6 +129,26 @@ const initEnLetterBag = (): string[] => {
     //random picking
     return shuffle(letterBag);
 }
+
+let enLettersScores: TLetterBag = {
+    1: ["A", "E", "I", "O", "U", "L", "N", "S", "T", "R"],
+    2: ["D", "G"],
+    3: ["B", "C", "M", "P"],
+    4: ["F", "H", "V", "W", "Y"],
+    5: ["K"],
+    8: ["J", "X"],
+    10: ["Q", "Z"],
+  };
+
+  let swaShengLettersScores: TLetterBag = {
+    1: ['A', 'O', 'I', 'N', 'M','E'],
+    2: ['U', 'C', 'H', 'D'],
+    3: ['K', 'R', 'B', 'W'],
+    4: ['F','P', 'S'],
+    5: ['G', 'T'],
+    8: ['V'],
+    10: ['Y'],
+  };
 
 // load tries
 fs.readFileSync('./utils/dictionaries/sheng.txt', 'utf8')
@@ -165,4 +184,12 @@ fs.readFileSync('./utils/dictionaries/swahili.txt', 'utf8')
         }
     });
 
-export { shengTrie, engTrie, swahiliTrie, initEnLetterBag, initShengLetterBag }
+export { 
+    shengTrie, 
+    engTrie, 
+    swahiliTrie, 
+    initEnLetterBag, 
+    initShengSwaLetterBag, 
+    enLettersScores, 
+    swaShengLettersScores
+}

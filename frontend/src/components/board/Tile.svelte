@@ -4,7 +4,7 @@
 
 <div class="square {isDisabled ? 'isdisabled' : ''}">
   <div class="letter-space no-select">
-    <span class="text-2xl">{letter.toUpperCase()}</span><sub class="text-xs">{score}</sub>
+    <span class="text-lg md:text-2xl">{letter.toUpperCase()}</span><sub class="text-xs">{score}</sub>
   </div>
 </div>
 

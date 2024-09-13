@@ -26,6 +26,11 @@
       $messages = [];
       $recoverTiles = null;
     }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('game')) 
+      selectedgame = urlParams.get('game');
+
   });
   
   onDestroy(() => {
@@ -116,16 +121,25 @@
     <span class="m-auto text-4xl uppercase text-white">Karibu</span>
 
     <label class="input input-bordered input-md flex items-center gap-2">
-      <span class="text-xs text-indigo-200 italic"> username</span>
+      <span class="text-xs text-amber-400 italic"> username</span>
       <input type="text" class="grow" placeholder="e.g. Kimana" bind:value="{username}" />
     </label>
 
-    <select class="select select-bordered select-md w-full max-w-xs" bind:value="{selectedgame}">
-      <option value="">-- Select Game --</option>
-      {#each games as game (game.id)}
-        <option value="{game.name}|{game.lang}">{game.name} ({game.lang})</option>
-      {/each}
-    </select>
+    <label class="input input-bordered input-md flex items-center gap-2">
+      {#if selectedgame}
+      <span class="text-xs text-amber-400 italic">
+        <a href="https://api.whatsapp.com/send?text={location.origin + '?game=' + selectedgame}">
+          <i class="fa-solid fa-share-nodes"></i>
+        </a>
+      </span>
+      {/if}
+      <select class="select select-md w-full max-w-xs" bind:value="{selectedgame}">
+        <option value="">-- Select Game --</option>
+        {#each games as game (game.id)}
+          <option value="{game.name}|{game.lang}">{game.name} ({game.lang})</option>
+        {/each}
+      </select>
+    </label>
 
     <button class="btn btn-neutral w-full" style="width: 100%;" on:click="{joinGame}">
       Join Game
@@ -146,12 +160,12 @@
         <h3 class="text-lg font-bold mb-4">+ Add</h3>
 
         <label class="input input-bordered input-md flex items-center gap-2 mb-3">
-          <span class="text-xs italic text-indigo-200">username</span>
+          <span class="text-xs italic text-amber-400">username</span>
           <input type="text" class="grow" placeholder="e.g. Kimana" bind:value="{newuname}" />
         </label>
 
         <label class="input input-bordered input-md flex items-center gap-2 mb-4">
-          <span class="text-xs italic text-indigo-200">Game Name </span>
+          <span class="text-xs italic text-amber-400">Game Name </span>
           <input type="text" class="grow text-lg" bind:value="{newgamename}" placeholder="unique game name" />
         </label>
 
@@ -171,10 +185,12 @@
           </label>
         {/if} -->
 
-        <form method="dialog">
-          <button class="btn btn-primary w-full" style="width: 100%;" on:click="{newGame}"> Save </button>
+        <form method="dialog" class="modal-backdrop">
+          <button class="btn btn-warning w-full" style="width: 100%;" on:click="{newGame}"> Save </button>
         </form>
+
       </div>
+
       <form method="dialog" class="modal-backdrop">
         <button>close</button>
       </form>
