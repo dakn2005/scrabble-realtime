@@ -52,6 +52,7 @@
 		"@highcharts/svelte": "^1.1.0",
 		"bits-ui": "^0.21.13",
 		"clsx": "^2.1.1",
+		"dayjs": "^1.11.13",
 		"highcharts": "^11.4.7",
 		"lodash-es": "^4.17.21",
 		"mode-watcher": "^0.4.1",

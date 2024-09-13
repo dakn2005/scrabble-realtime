@@ -7,4 +7,5 @@ export let
     chatsOpen =writable(false),
     userStore = persisted('userStore', {}),
     messages = persisted('messages', []),
+    history = persisted('stats', []),
     recoverTiles = persisted('recoverTiles', null);

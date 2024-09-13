@@ -1,6 +1,7 @@
 <script>
   import { onMount, onDestroy } from "svelte";
   import * as Sheet from "$lib/components/ui/sheet";
+  import * as Tabs from "$lib/components/ui/tabs";
   import io from "socket.io-client";
   import { Toaster } from "$lib/components/ui/sonner";
 
@@ -10,33 +11,34 @@
 
   import Board from "$components/board/Board.svelte";
   import Chat from "$components/chat/Index.svelte";
+  import Hist from "$components/board/Hist.svelte";
 
   const { username, game } = $userStore;
 
-  onMount(() => {
+  // onMount(() => {
 
-    if (!$socket) {
-      $socket = io.connect(SOCKET_URL, { transports: ["websocket", 'polling'] }); 
+  //   if (!$socket) {
+  //     $socket = io.connect(SOCKET_URL, { transports: ["websocket", 'polling'] }); 
 
-      // rejoin room - below not working!
-      // if (username == "") {
-      //   goto('/')
-      // } else {
-      //   $socket.emit("join_game", { username, game: game.name });
-      // }
-    }
+  //     // rejoin room - below not working!
+  //     // if (username == "") {
+  //     //   goto('/')
+  //     // } else {
+  //     //   $socket.emit("join_game", { username, game: game.name });
+  //     // }
+  //   }
 
-    if (game.lang == LANGS.sheng) {
-      // * moved to backend
-      // (async () =>{
-      //   let resp = await fetch(SOCKET_URL + "/api/games/trie?lang=sheng");
-      //   let trie = await resp.json();
-      //   // console.log(trie);
-      // })()
-    }
+  //   if (game.lang == LANGS.sheng) {
+  //     // * moved to backend
+  //     // (async () =>{
+  //     //   let resp = await fetch(SOCKET_URL + "/api/games/trie?lang=sheng");
+  //     //   let trie = await resp.json();
+  //     //   // console.log(trie);
+  //     // })()
+  //   }
 
-    $messages = [];
-  });
+  //   $messages = [];
+  // });
   
 </script>
 
@@ -50,11 +52,23 @@
 <Sheet.Root bind:open="{$chatsOpen}">
   <!-- <Sheet.Trigger>Open</Sheet.Trigger> -->
   <Sheet.Content>
-    <Sheet.Header>
-      <Sheet.Title>Chat Room</Sheet.Title>
+    <!-- <Sheet.Header> -->
+      <!-- <Sheet.Title>Chat Room</Sheet.Title> -->
       <!-- <Sheet.Description>This action cannot be undone. This will permanently delete your account and remove your data from our servers.</Sheet.Description> -->
-    </Sheet.Header>
+    <!-- </Sheet.Header> -->
 
-    <Chat />
+    <Tabs.Root value="chatting" class="w-full">
+      <Tabs.List class="w-full">
+        <Tabs.Trigger value="chatting">Chats</Tabs.Trigger>
+        <Tabs.Trigger value="historia">Turn History</Tabs.Trigger>
+      </Tabs.List>
+      <Tabs.Content value="chatting">
+        <Chat />
+      </Tabs.Content>
+      <Tabs.Content value="historia">
+        <Hist />
+      </Tabs.Content>
+    </Tabs.Root>
+
   </Sheet.Content>
 </Sheet.Root>
