@@ -29,12 +29,12 @@
       $recoverTiles = null;
     }
 
-    let dparamstr = decodeURIComponent(location.search);
-    const urlParams = new URLSearchParams(dparamstr);
+    const urlParams = new URLSearchParams(location.search);
     if (urlParams.has("game")) {
-      let dparamstrArr = dparamstr.split("=");
+      let dparamstrArr = location.search.split("=");
       // selectedgame = urlParams.get("game");
-      selectedgame = dparamstrArr[1].replaceAll("'","");
+      selectedgame = decodeURIComponent(dparamstrArr[1].replaceAll("_", " "));
+      // console.log(selectedgame)
     }
   });
 
@@ -56,8 +56,10 @@
   }
 
   function share() {
-    let wUrl = `https://api.whatsapp.com/send?text=${location.origin}?game='${encodeURIComponent(selectedgame)}'`;
-    let url = location.origin + "?game='" + encodeURIComponent(selectedgame)+"'";
+    // TODO: finish on sharing..
+    let sg_nospace = selectedgame.replaceAll(" ", "_");
+    let wUrl = `https://api.whatsapp.com/send?text=${location.origin}?game=${encodeURIComponent(sg_nospace)}`;
+    let url = location.origin + "?game=" + encodeURIComponent(sg_nospace);
 
     if (navigator.canShare())
       navigator.share(url);
@@ -101,6 +103,8 @@
 
     username = newuname.charAt(0).toUpperCase() + newuname.slice(1);
     newgamename = newgamename.charAt(0).toUpperCase() + newgamename.slice(1);
+    //replace all non-numeric chars with single spacing
+    newgamename = newgamename.replace(/[^a-zA-Z0-9]+/g, ' ').trim()
     selectedgame = `${newgamename}|${newgame_lang}`;
 
     try {
