@@ -6,12 +6,14 @@
   import { SOCKET_URL, LANGS } from "$lib/constants.js";
   import { userStore, socket, messages, recoverTiles } from "$lib/stores.js";
 
-  let username = "", selectedgame;
+  let username = "",
+    selectedgame;
   let newuname = "",
     newgamename = "",
     newgame_lang,
     games = [];
-  let joining = false;
+
+  let joining = false, saving = false;
 
   let interval;
 
@@ -27,17 +29,20 @@
       $recoverTiles = null;
     }
 
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('game')) 
-      selectedgame = urlParams.get('game');
-
+    let dparamstr = decodeURIComponent(location.search);
+    const urlParams = new URLSearchParams(dparamstr);
+    if (urlParams.has("game")) {
+      let dparamstrArr = dparamstr.split("=");
+      // selectedgame = urlParams.get("game");
+      selectedgame = dparamstrArr[1].replaceAll("'","");
+    }
   });
-  
+
   onDestroy(() => {
     clearInterval(interval);
     // console.log(interval);
   });
-  
+
   function resetInterval() {
     clearInterval(interval);
 
@@ -50,6 +55,16 @@
     caller();
   }
 
+  function share() {
+    let wUrl = `https://api.whatsapp.com/send?text=${location.origin}?game='${encodeURIComponent(selectedgame)}'`;
+    let url = location.origin + "?game='" + encodeURIComponent(selectedgame)+"'";
+
+    if (navigator.canShare())
+      navigator.share(url);
+    else
+      window.open(wUrl, "_blank");
+      // window.open(url, "_blank");
+  }
 
   const joinGame = (e) => {
     joining = true;
@@ -75,12 +90,12 @@
     }
   };
 
-  const newGame = async (e) => {
-    e.preventDefault();
+  const newGame = async (join) => {
+    saving = true;
 
     if (newuname == "" || newgamename == "") {
       toast.error("Please enter a username and game name");
-
+      saving = false;
       return;
     }
 
@@ -106,8 +121,11 @@
       } else {
         // let gameObj = res.games.find((g) => g.name == newgame);
         // game = gameObj.id
-        joinGame();
+        if (join) joinGame();
+        document.querySelector(".modal-backdrop>button").click();
       }
+
+      saving = false;
     } catch (e) {
       toast.error("Error Communicating with the Server");
     }
@@ -129,13 +147,13 @@
 
     <label class="input input-bordered input-md flex items-center gap-2">
       {#if selectedgame}
-      <span class="text-xs text-amber-400 italic">
-        <a href="https://api.whatsapp.com/send?text={location.origin + '?game=' + selectedgame}">
-          <i class="fa-solid fa-share-nodes"></i>
-        </a>
-      </span>
+        <span class="text-xs text-amber-400 italic">
+          <button on:click="{share}">
+            <i class="fa-solid fa-share-nodes"></i>
+          </button>
+        </span>
       {/if}
-      <select class="select select-md w-full max-w-xs" bind:value="{selectedgame}">
+      <select class="select select-md w-full outline-none focus:outline-none focus:ring-0" bind:value="{selectedgame}">
         <option value="">-- Select Game --</option>
         {#each games as game (game.id)}
           <option value="{game.name}|{game.lang}">{game.name} ({game.lang})</option>
@@ -187,10 +205,26 @@
           </label>
         {/if} -->
 
-        <form method="dialog" class="modal-backdrop">
-          <button class="btn btn-warning w-full" style="width: 100%;" on:click="{newGame}"> Save </button>
-        </form>
+        <!-- <form method="dialog" class="modal-backdrop"> -->
+        <div class="flex flex-row">
+          <button class="btn btn-outline btn-warning w-1/3 disabled:btn-disabled" on:click="{() => newGame()}" disabled="{saving}">
+            {#if saving}
+              <span class="loading loading-spinner loading-xs {saving ? 'visible' : 'invisible'}"></span>
+            {:else}
+              Save
+            {/if}
+          </button>
+          &nbsp;
+          <button class="btn btn-warning w-2/3" on:click="{() => newGame(true)}" disabled="{saving}">
+            {#if saving}
+              <span class="loading loading-spinner loading-xs {saving ? 'visible' : 'invisible'}"></span>
+            {:else}
+              Save &amp; Join
+            {/if}
+          </button>
+        </div>
 
+        <!-- </form> -->
       </div>
 
       <form method="dialog" class="modal-backdrop">
