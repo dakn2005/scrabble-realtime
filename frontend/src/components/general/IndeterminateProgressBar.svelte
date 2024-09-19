@@ -5,8 +5,8 @@
 
 {#if isloading}
 <div class='w-full'>
-      <div class='h-1.5 w-full bg-pink-100 overflow-hidden'>
-        <div class='progress w-full h-full bg-sky-300 left-right'></div>
+      <div class='h-1.5 w-full overflow-hidden' style="background-color: #272727;">
+        <div class='progress w-full h-full bg-amber-200 left-right'></div>
       </div>
 </div>
 {/if}

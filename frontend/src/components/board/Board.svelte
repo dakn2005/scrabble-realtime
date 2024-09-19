@@ -16,10 +16,18 @@
   import FloatingBtn from "$components/general/FloatingBtn.svelte";
   import IndeterminateProgressBar from "$components/general/IndeterminateProgressBar.svelte";
   // import Queue from "$lib/queue.js";
-
+  import { SOCKET_URL } from "$lib/constants.js";
   import { socket, userStore, messages, settingsOpen, recoverTiles, history } from "$lib/stores.js";
 
   onMount(() => {
+    // ensure render free-tier is always up when on board
+    setInterval(async () => {
+      const resp = await fetch(SOCKET_URL + "/api/amka");
+      let stt = await resp.status
+      
+      // console.log('amka! ', stt)
+    }, 45000);
+
     setTimeout(() => {
       // console.log(currentPlayer);
 
@@ -35,6 +43,7 @@
         }, 2000);
       }
     }, 2000);
+
   });
 
   // onDestroy(() => {
@@ -268,7 +277,14 @@
     }
 
     // further validations
+    //validation I - prevent floating words
+    if (wordMap.get("7,7")){
+      if (!thewordcoords.some(c => wordMap.keys().includes(`${c[0]},${c[1]}`))){
+        return [[], [], "Floating word not allowed"];
+      }
+    }
 
+    //validation II - prevent letter gaps
     colarr = [];
     rowarr = [];
     thewordcoords.forEach((pos) => {
@@ -537,6 +553,8 @@
             wordscore: words.map((w) => [w[0], w[2]]),
           },
         ];
+
+
 
         toast.success("Word Accepted :-)", { duration: 2000 });
       } else if (data.status == "chorea") {

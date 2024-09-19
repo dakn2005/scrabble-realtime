@@ -168,7 +168,7 @@ fs.readFileSync('./utils/dictionaries/sheng.txt', 'utf8')
         }
     });
 
-fs.readFileSync('./utils/dictionaries/en.txt', 'utf8')
+fs.readFileSync('./utils/dictionaries/en_curated.txt', 'utf8')
     .split('\n')
     .forEach(word => {
         if (word.trim().split('').length > 1) {
@@ -176,7 +176,7 @@ fs.readFileSync('./utils/dictionaries/en.txt', 'utf8')
         }
     });
 
-fs.readFileSync('./utils/dictionaries/swahili.txt', 'utf8')
+fs.readFileSync('./utils/dictionaries/swa_curated.txt', 'utf8')
     .split('\n')
     .forEach(word => {
         if (word.trim().split('').length > 1) {

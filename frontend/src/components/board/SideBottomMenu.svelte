@@ -46,9 +46,17 @@
 
   <li>
     <!-- <label for="chat-drawer">chat</label> -->
-    <button on:click="{() => ($chatsOpen = true)}">
-      <i class="fa-regular fa-comment-dots"></i>
-      <span>chats </span>
+    <button on:click="{() => ($chatsOpen = [true, 'historia'])}">
+      <i class="fa-solid fa-clock-rotate-left"></i>
+      <span>History</span>
+    </button>
+  </li>
+
+  <li>
+    <!-- <label for="chat-drawer">chat</label> -->
+    <button on:click="{() => ($chatsOpen = [true, 'chatting'])}">
+      <i class="fa-regular fa-comment-dots {$messages?.length ? 'animate-pulse' : ''}"></i>
+      <span>Chat</span>
     </button>
   </li>
 

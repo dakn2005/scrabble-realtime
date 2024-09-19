@@ -40,6 +40,10 @@ app.get('/', (req: Request, res: Response) => {
 
 app.use('/', express.static(path.join(__dirname, 'public/')))
 
+app.get('/api/amka', (req: Request, res: Response) => {
+    res.send('Howdy!');
+});
+
 app.get('/api/games', async (req: Request, res: Response) => {
     const games = await getGames();
     res.send(games)
@@ -319,17 +323,17 @@ io.on('connection', (socket: Socket) => {
         if (data.words[0][0].length == 1)
             all_verified.push(false);
 
-        if (data.game.lang == ELangs.sheng) {
+        if (data.game.lang == ELangs.sheng || data.game.lang == ELangs.swa) {
             // https://lughayangu.com/sheng
             // https://kenyanmagazine.co.ke/200-sheng-words-and-their-meanings/
             for (const word of data.words) {
                 // console.log(word)
 
-                let isword = shengTrie.search(word[0]);
+                let isword = false 
+                
+                if (data.game.lang == ELangs.sheng) isword = shengTrie.search(word[0]);
 
-                if (!isword) {
-                    isword = swahiliTrie.search(word[0]);
-                }
+                if (!isword) isword = swahiliTrie.search(word[0]);
 
                 if (!isword) {
                     // (async () => {
@@ -462,6 +466,8 @@ io.on('connection', (socket: Socket) => {
             });
     
             history = flatten(history);
+
+            history.sort((a, b) => new Date(b.masaa).getTime() - new Date(a.masaa).getTime());
 
             await patchGameState(data.game.name, {
                 statistics: JSON.stringify(gstate),
