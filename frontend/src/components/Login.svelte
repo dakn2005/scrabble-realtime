@@ -6,7 +6,7 @@
   import { SOCKET_URL, LANGS } from "$lib/constants.js";
   import { userStore, socket, messages, recoverTiles } from "$lib/stores.js";
 
-  let username = "",
+  let username = "Kimna",
     selectedgame;
   let newuname = "",
     newgamename = "",
@@ -68,7 +68,7 @@
       // window.open(url, "_blank");
   }
 
-  const joinGame = (e) => {
+  const joinGame = (le_admin) => {
     joining = true;
 
     let [gameName, gameLang] = selectedgame.split("|");
@@ -78,7 +78,9 @@
       joining = false;
     } else {
       username = username.charAt(0).toUpperCase() + username.slice(1);
-      let ustore = { username, game: { name: gameName, lang: gameLang } };
+      let admin = le_admin ?? games.find(g => g.created_by == username && g.name == gameName)?.created_by;
+
+      let ustore = { username, game: { name: gameName, lang: gameLang, admin } };
       $userStore = ustore;
 
       $socket.emit("join_game", { username: ustore.username, game: ustore.game });
@@ -125,7 +127,7 @@
       } else {
         // let gameObj = res.games.find((g) => g.name == newgame);
         // game = gameObj.id
-        if (join) joinGame();
+        if (join) joinGame(username);
         document.querySelector(".modal-backdrop>button").click();
       }
 
@@ -165,7 +167,7 @@
       </select>
     </label>
 
-    <button class="btn btn-neutral w-full" style="width: 100%;" on:click="{joinGame}">
+    <button class="btn btn-neutral w-full" style="width: 100%;" on:click="{() => joinGame()}">
       Join Game
       <span class="loading loading-spinner loading-xs {joining ? 'visible' : 'invisible'}"></span>
     </button>

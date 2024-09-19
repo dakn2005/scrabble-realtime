@@ -21,7 +21,7 @@
       {#if hist.wordscore}
         {#each hist.wordscore as ws}
         <div class="flex flex-row justify-between bg-slate-100 p-2 text-sm">
-          <a href={`google.com/search?q=${ws[0]}+${game.lang}+meaning`} target="_blank">{ws[0]} <i class="fa-solid fa-square-arrow-up-right text-xs"></i></a>
+          <a href={`https://google.com/search?q=${ws[0]}+${game.lang}+meaning`} target="_blank">{ws[0]} <i class="fa-solid fa-square-arrow-up-right text-xs"></i></a>
           <span></span>
           <span>{ws[1]}</span>
         </div>

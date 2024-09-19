@@ -192,7 +192,7 @@ io.on('connection', (socket: Socket) => {
                 }
             });
 
-            if (mchezaji){
+            if (mchezaji) {
                 mchezaji.score = prevScore;
 
                 if (!gamePlayers.includes(mchezaji))
@@ -243,6 +243,29 @@ io.on('connection', (socket: Socket) => {
         // saveMessage(rec)
     });
 
+    socket.on('reset_game', async (data) => {
+        let { username, game } = data;
+        
+        let lb = game.lang == ELangs.en ? initEnLetterBag : initShengSwaLetterBag;
+        await patchGameState(game.name, {
+            letterbag: lb,
+            statistics: null,
+            updatedate: new Date()
+        });
+        
+        let gamePlayers = players.filter((user) => user?.game === game.name);
+        for (let p of gamePlayers) {
+            delete tempPlayerTileData[`${username}_${game.name}`];
+            io.to(game.name).emit('umeleftishwa', p.username);
+        }
+
+        // purge game players
+        players = players.filter((user) => user?.game != game.name);
+
+        // purge all sockets
+        io.in(game.name).socketsLeave(game.name);
+    });
+
     socket.on('leave_game', async (data) => {
 
         const { username, gameName } = data;
@@ -258,7 +281,6 @@ io.on('connection', (socket: Socket) => {
             let gs: IGameStateTable[] = await getGameState(gameName);
             let lb = gs[0].letterbag;
 
-
             if (lb) {
                 // console.log('no recovertile', [...lb, ...temptiles]);
 
@@ -273,7 +295,6 @@ io.on('connection', (socket: Socket) => {
             let gs: IGameStateTable[] = await getGameState(gameName);
             let lb = gs[0].letterbag;
 
-
             if (lb) {
                 // console.log('recovertile', [...lb, ...data.recoverTiles])
 
@@ -285,8 +306,13 @@ io.on('connection', (socket: Socket) => {
         // }
 
         // TODO: if players remaining, assign to next player
+        if (data.removeOtherPlayer) {
+            let socketId = players.find(p => p.username == username && p.game == gameName)?.id ?? '';
+            io.sockets?.sockets?.get(socketId)?.leave(gameName);
+        }else{
+            socket.leave(gameName);
+        }
 
-        socket.leave(gameName);
         const __createdtime__ = Date.now();
         // Remove user from memory
         players = leaveGame(username, gameName, players);
@@ -298,6 +324,7 @@ io.on('connection', (socket: Socket) => {
             __createdtime__,
         });
 
+        socket.to(gameName).emit('umeleftishwa', username);
         // console.log(`${username} has left the chat`);
         // console.log(players)
     });
@@ -329,8 +356,8 @@ io.on('connection', (socket: Socket) => {
             for (const word of data.words) {
                 // console.log(word)
 
-                let isword = false 
-                
+                let isword = false
+
                 if (data.game.lang == ELangs.sheng) isword = shengTrie.search(word[0]);
 
                 if (!isword) isword = swahiliTrie.search(word[0]);
@@ -439,32 +466,32 @@ io.on('connection', (socket: Socket) => {
             history = Object.keys(gstate).map(k => {
                 let mchezaji: IUser = gamePlayers.find(u => u.username == k) as IUser;
                 let prevScore = 0;
-    
+
                 let to_return = gstate[k].map((s: TPlayerData) => {
                     let wsarr = s.words.map(w => [w[0], w[2]]);
                     let playerScore = s.words.reduce((a, b) => a + b[2], 0);
-    
+
                     if (mchezaji) {
                         prevScore += playerScore
                     }
-    
+
                     return {
                         player: k,
                         masaa: s.timestamp,
                         wordscore: wsarr
                     }
                 });
-    
-                if (mchezaji){
+
+                if (mchezaji) {
                     mchezaji.score = prevScore;
-    
+
                     if (!gamePlayers.includes(mchezaji))
                         gamePlayers = [...gamePlayers, mchezaji];
                 }
-    
+
                 return to_return;
             });
-    
+
             history = flatten(history);
 
             history.sort((a, b) => new Date(b.masaa).getTime() - new Date(a.masaa).getTime());

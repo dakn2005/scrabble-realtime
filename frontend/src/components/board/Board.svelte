@@ -8,6 +8,7 @@
   // import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
   import * as Drawer from "$lib/components/ui/drawer";
   import { throttle } from "lodash-es";
+  import { DotLottieSvelte } from "@lottiefiles/dotlottie-svelte";
 
   import Tile from "./Tile.svelte";
   import Square from "./Square.svelte";
@@ -20,11 +21,13 @@
   import { socket, userStore, messages, settingsOpen, recoverTiles, history } from "$lib/stores.js";
 
   onMount(() => {
+    autoplay = true;
+
     // ensure render free-tier is always up when on board
     setInterval(async () => {
       const resp = await fetch(SOCKET_URL + "/api/amka");
-      let stt = await resp.status
-      
+      let stt = await resp.status;
+
       // console.log('amka! ', stt)
     }, 45000);
 
@@ -43,7 +46,6 @@
         }, 2000);
       }
     }, 2000);
-
   });
 
   // onDestroy(() => {
@@ -53,7 +55,7 @@
 
   //   pickedTiles = [];
   // });
-
+  let autoplay = true;
   let gamePlayers = [],
     remainingTiles = 0;
   let currentPlayer,
@@ -182,7 +184,7 @@
     let colarr = [],
       rowarr = [];
 
-    let invalidWordArr = [[], [], "invalid word :( \nensure the tiles are properly set"];
+    let invalidWordArr = [[], [], "invalid word, ensure the tiles are properly set"];
 
     let wordidentifier = (letter, coord, rowwise, colwise) => {
       let lastcoords = thewordcoords.length > 0 ? thewordcoords.at(-1) : null;
@@ -241,11 +243,11 @@
       }
     };
 
-    if (wordMap.size == 0) {
-      if (queue.length == 0) {
-        return [[], [], "No word found"];
-      }
+    // if (wordMap.size == 0) {
+    if (queue.length == 0) {
+      return [[], [], "No tile has been set"];
     }
+    // }
 
     if (wordMap.get("7,7") == undefined && newlyVisited.get("7,7") == undefined) {
       return [[], [], "Beginning of game must have a letter in the middle tile"];
@@ -278,8 +280,8 @@
 
     // further validations
     //validation I - prevent floating words
-    if (wordMap.get("7,7")){
-      if (!thewordcoords.some(c => wordMap.keys().includes(`${c[0]},${c[1]}`))){
+    if (wordMap.get("7,7")) {
+      if (!thewordcoords.some((c) => [...wordMap.keys()].includes(`${c[0]},${c[1]}`))) {
         return [[], [], "Floating word not allowed"];
       }
     }
@@ -386,8 +388,10 @@
 
       // console.log({ words, userdetails: $userStore });
 
-      if (words.length == 0) toast.error("Word Not Found :-(", { duration: 2500 });
-      else $socket.emit("submit_words", { username, game, words, recoverTiles: pickedTiles?.map((t) => t.letter), nv: Object.fromEntries(newlyVisited) });
+      if (words.length == 0) {
+        isloading = false;
+        toast.error("Word Not Found :-(", { duration: 2500 });
+      } else $socket.emit("submit_words", { username, game, words, recoverTiles: pickedTiles?.map((t) => t.letter), nv: Object.fromEntries(newlyVisited) });
 
       return;
     }
@@ -397,6 +401,7 @@
     let [proposedWord, proposedWordCoords, error] = getFullWord();
 
     if (error) {
+      isloading = false;
       toast.info(error);
       return;
     }
@@ -464,6 +469,16 @@
 
   function passMeFunc() {
     if (confirm("Pass to next player?")) $socket.emit("pass_me", { game });
+  }
+
+  function adminResetGame() {
+    if (confirm("Reset Game?"))
+      $socket.emit("reset_game", { username, game });
+  }
+
+  function adminRemovePlayer(pName) {
+    if (confirm('Remove selected player?'))
+      $socket.emit("leave_game", { username: pName, gameName: game?.name, removeOtherPlayer: true });
   }
 
   const leaveGameFunc = () => {
@@ -554,8 +569,6 @@
           },
         ];
 
-
-
         toast.success("Word Accepted :-)", { duration: 2000 });
       } else if (data.status == "chorea") {
         visited.clear();
@@ -565,8 +578,7 @@
       // playerWordSubmittedStatusCss = data.status;
     }
 
-    if (document.getElementById("hist-container")) 
-      document.getElementById("hist-container").scrollTop = document.getElementById("hist-container")?.scrollHeight;
+    if (document.getElementById("hist-container")) document.getElementById("hist-container").scrollTop = document.getElementById("hist-container")?.scrollHeight;
   });
 
   $socket?.on("player_playing", (data) => {
@@ -663,9 +675,19 @@
     }
     // }, 1000);
   });
+
+  $socket?.on("umeleftishwa", (data) => {
+    if (username == data.username){
+      $userStore = {};
+      $messages = [];
+
+      goto("/");
+    }
+  });
 </script>
 
 <IndeterminateProgressBar {isloading} />
+
 <div class="game-container game-height">
   <div class="flex {!toggleSideBar ? 'flex-row' : 'flex-row-reverse'}">
     <SideBottomMenu {setToggleSideBar} {submit} {pickTilesFunc} {passMeFunc} {leaveGameFunc} disabled="{currentPlayer?.toLowerCase() != username?.toLowerCase()}" />
@@ -733,20 +755,32 @@
           ({game.lang})
         </span>
       </div>
+      <div class="w-full text-center">
+        {#if username == game.admin}
+          <button class="text-xs text-white btn btn-xs btn-error" on:click="{() => adminResetGame()}"> reset game </button>
+        {/if}
+      </div>
     </Drawer.Header>
 
     <!-- divider here -->
     <!-- users[scores] | tiles left | turn history |  -->
 
     <div class="flex flex-col md:flex-row w-full p-6 md:p-2">
-      <div class="w-full md:w-1/3 text-center mb-4 md:mb-0">
+      <div class="w-full md:w-1/3 mb-4 md:mb-0">
         <div class="flex flex-row">
           {#each gamePlayers as player}
-            <span class="border-t-4 rounded w-1/2 text-xs mr-3 p-1 {player.username == currentPlayer ? 'border-green-400 bg-green-300' : 'border-slate-400 bg-slate-200'}">
-              {player.username}
-              {player.username.toLowerCase() == username.toLowerCase() ? "(you)" : ""}
-              <div class="badge">{player.score}</div>
-            </span>
+            <div class="border-t-4 rounded w-1/2 text-xs mr-3 flex flex-row {player.username == currentPlayer ? 'border-green-400 bg-green-300' : 'border-slate-400 bg-slate-200'}">
+              {#if username == game.admin && player.username != username}
+                <button class="w-1/12 h-full text-center cursor-pointer {player.username == currentPlayer ? ' bg-green-400' : ' bg-slate-400'}" on:click="{() => adminRemovePlayer(player.username)}"> &times; </button>
+              {/if}
+              <div class="text-center p-1 {username == game.admin ? 'w-11/12' : 'w-full'}">
+                <span>
+                  {player.username}
+                  {player.username.toLowerCase() == username.toLowerCase() ? "(you)" : ""}
+                </span>
+                <div class="badge">{player.score}</div>
+              </div>
+            </div>
           {/each}
         </div>
       </div>
@@ -756,12 +790,15 @@
         <span>tiles left</span>
       </div>
 
-      <div class="w-full md:w-1/3 text-center mb-4 md:mb-0">
-        <!-- <ScoreChart /> -->
-        <a href="https://buymeacoffee.com/dakn2005" target="_blank" class="text-white pacifico-regular btn bg-amber-400 hover:bg-amber-600">
-          <i class="fa-solid fa-mug-hot"></i>
-          buy me a coffee
-        </a>
+      <div class="w-full md:w-1/3 mb-4 md:mb-0">
+        <div class="flex flex-col text-center justify-center w-[200px] -mt-10">
+          <DotLottieSvelte src="coffee2.lottie" background="transparent" speed="1" style="width: 100px; height: 100px" direction="1" playMode="normal" autoplay loop></DotLottieSvelte>
+          <!-- <ScoreChart /> -->
+          <a href="https://buymeacoffee.com/dakn2005" target="_blank" class="text-white pacifico-regular btn bg-amber-400 hover:bg-amber-600">
+            <!-- <i class="fa-solid fa-mug-hot"></i> -->
+            buy me a coffee
+          </a>
+        </div>
       </div>
     </div>
 
