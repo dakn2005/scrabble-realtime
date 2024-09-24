@@ -104,6 +104,7 @@
   let proposedTotalWordScore = 0;
   // let playerWordSubmittedStatusCss = '';
 
+
   // let newlySubbmittedWord = [
   //   { id: 1, letter: "M" },
   //   { id: 2, letter: "B" },
@@ -794,10 +795,25 @@
         <div class="flex flex-col text-center justify-center w-[200px] -mt-10">
           <DotLottieSvelte src="coffee2.lottie" background="transparent" speed="1" style="width: 100px; height: 100px" direction="1" playMode="normal" autoplay loop></DotLottieSvelte>
           <!-- <ScoreChart /> -->
-          <a href="https://buymeacoffee.com/dakn2005" target="_blank" class="text-white pacifico-regular btn bg-amber-400 hover:bg-amber-600">
+          <details class="dropdown dropdown-top">
+            <summary class="btn text-white pacifico-regular bg-amber-400 hover:bg-amber-600">Buy me a coffee</summary>
+            <ul class="menu dropdown-content bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
+              <li>
+                <a href="https://buymeacoffee.com/dakn2005" target="_blank" class="flex justify-between">
+                  <span>Card</span>
+                  <span>&rarr;</span>
+                </a>
+              </li>
+              <li>
+                <a href="/coffee/mpesa" target="_blank" class="flex justify-between">
+                  <span>MPesa</span>
+                  <span>&rarr;</span>
+                </a>
+              </li>
+            </ul>
+          </details>
+          
             <!-- <i class="fa-solid fa-mug-hot"></i> -->
-            buy me a coffee
-          </a>
         </div>
       </div>
     </div>

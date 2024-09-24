@@ -5,6 +5,17 @@ interface IUser {
     score?: number;
 }
 
+interface IStkReponse { 
+    stkresponse_id: string; 
+    MerchantRequestID: string; 
+    CheckoutRequestID: string; 
+    ResultCode?: string; 
+    CallbackMetadata?: JSON
+    createddate: Date
+    updatedate?: Date
+    ResultDesc?: string
+}
+
 interface IMessage {
     message: string
     username: string
@@ -56,4 +67,4 @@ enum ELangs {
 }
 // interface IGameSt
 
-export { IUser, IMessage, IGame,IGameStateTable, ELangs, TLetterBag, TPlayerData, TStats, TTempTiles }
+export { IUser, IMessage, IGame,IGameStateTable, IStkReponse, ELangs, TLetterBag, TPlayerData, TStats, TTempTiles }

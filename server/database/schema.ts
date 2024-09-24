@@ -51,3 +51,17 @@ export const game_state = pgTable(
     })
 )
 
+export const stkresponse = pgTable(
+    'stkresponse',
+    {
+        stkresponse_id: varchar('stkresponse_id', { length: 100 }).primaryKey().notNull(),
+        MerchantRequestID: varchar('MerchantRequestID', { length: 100 }).notNull(),
+        CheckoutRequestID: varchar('CheckoutRequestID', { length: 100 }).notNull(),
+        ResultCode: varchar('ResultCode', { length: 10 }).notNull(),
+        ResultDesc: varchar('ResultDesc', { length: 250 }),
+        CallbackMetadata: json('CallbackMetadata'),
+        createddate: date('createddate', { mode: 'date' }).notNull().default(sql`now()`),
+        updatedate: date('updatedate', { mode: 'date' })
+    }
+)
+

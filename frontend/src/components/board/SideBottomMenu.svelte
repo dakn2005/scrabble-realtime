@@ -13,7 +13,7 @@
   const { username, game } = $userStore;
 </script>
 
-<ul class="{isbottom ? 'md:invisible menu bottommenu' : 'hidden md:menu sidemenu mt-24 mb-auto'}">
+<ul class="{isbottom ? 'md:invisible menu bottommenu' : 'hidden md:menu sidemenu mt-12 mb-auto'}">
   <li>
     <button on:click="{submit}" {disabled} class="{disabled ? 'disabled' : ''}">
       <i class="fa-solid fa-upload"></i>

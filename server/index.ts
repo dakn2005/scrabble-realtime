@@ -10,17 +10,21 @@ import cors from 'cors';
 import path from 'path';
 import 'dotenv/config';
 import flatten from 'lodash/flatten';
+import { ulid } from 'ulid';
 
 import { IUser, ELangs, IGameStateTable, IGame, TStats, TPlayerData, TTempTiles, TLetterBag } from './interfaces'
-import { getGames, createGame, upsertGameState, patchGameState, getGameState } from './database/services/crud';
+import { getGames, createGame, upsertGameState, patchGameState, getGameState, saveStkReponse } from './database/services/crud';
+import { shengTrie, engTrie, swahiliTrie, initShengSwaLetterBag, initEnLetterBag, enLettersScores, swaShengLettersScores } from './utils/tries';
 import { leaveGame, leaveGameBySocketId } from './utils/leave-game';
 import errorHandling from './utils/errorHandling';
-import { shengTrie, engTrie, swahiliTrie, initShengSwaLetterBag, initEnLetterBag, enLettersScores, swaShengLettersScores } from './utils/tries';
+
+// https://stackoverflow.com/questions/41219542/how-to-import-js-modules-into-typescript-file
+const mpesa:any = require('./utils/payment.js')
 
 let app = express();
 
 app.use(cors());
-app.use(express.json())
+app.use(express.json());
 // app.use(express.urlencoded({extended: true}))
 
 const server = http.createServer(app);
@@ -49,8 +53,8 @@ app.get('/api/games', async (req: Request, res: Response) => {
     res.send(games)
 });
 
+// TODO: deprecated
 app.get('/api/games/trie', async (req: Request, res: Response) => {
-    // TODO: deprecated
     if (req.params['lang'] == 'sheng') {
         res.send(shengTrie)
     }
@@ -76,6 +80,26 @@ app.post('/api/games/add', async (req: Request, res: Response) => {
     }
 
     // console.log(err)
+});
+
+app.post('/api/coffee/mpesa/feedback', async (req: Request, res: Response) => {
+    let dayta = req.body?.Body?.stkCallback;
+
+    await saveStkReponse({
+        stkresponse_id: ulid(),
+        ...dayta
+    });
+   
+    res.send({
+        message: 'success'
+    })
+});
+
+app.post('/api/coffee/mpesa', async (req: Request, res: Response) => {
+    let response = await mpesa.PostMpesa(req);  
+    console.log(response)
+    return res.send(response);
+    // return res.send({msg: 'nipo hapa'})
 });
 
 const io = new Server(server, {
