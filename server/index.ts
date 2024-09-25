@@ -233,6 +233,8 @@ io.on('connection', (socket: Socket) => {
 
         history = flatten(history);
 
+        history.sort((a, b) => new Date(b.masaa).getTime() - new Date(a.masaa).getTime());
+        
         // console.log(gamePlayers);
 
         io.to(gameName).emit('ingame_players', gamePlayers);

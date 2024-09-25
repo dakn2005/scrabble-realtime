@@ -17,7 +17,7 @@
   import FloatingBtn from "$components/general/FloatingBtn.svelte";
   import IndeterminateProgressBar from "$components/general/IndeterminateProgressBar.svelte";
   // import Queue from "$lib/queue.js";
-  import { SOCKET_URL } from "$lib/constants.js";
+  import { SOCKET_URL, PROD } from "$lib/constants.js";
   import { socket, userStore, messages, settingsOpen, recoverTiles, history } from "$lib/stores.js";
 
   onMount(() => {
@@ -566,12 +566,12 @@
         wordMap = wordMap;
 
         $history = [
-          ...$history,
           {
             player: username,
             masaa: new Date(),
             wordscore: words.map((w) => [w[0], w[2]]),
           },
+          ...$history,
         ];
 
         toast.success("Word Accepted :-)", { duration: 2000 });
@@ -664,20 +664,21 @@
 
   $socket?.on("receive_message", (data) => {
     $messages = [
-      ...$messages,
       {
         message: data.message,
         username: data.username,
         __createdtime__: data.__createdtime__,
       },
+      ...$messages,
     ];
 
     // console.log(document.getElementById("chats-container")?.scrollHeight);
 
-    if (document.getElementById("chats-container")) {
-      document.getElementById("chats-container").scrollTop = document.getElementById("chats-container")?.scrollHeight + 150;
-      document.getElementById("chats-container").scrollIntoView({ behavior: "smooth" });
-    }
+    // if (document.getElementById("chats-container")) {
+    //   document.getElementById("chats-container").scrollTop = document.getElementById("chats-container")?.scrollHeight + 150;
+    //   document.getElementById("chats-container").scrollIntoView({ behavior: "smooth" });
+    // }
+
     // }, 1000);
   });
 
@@ -818,10 +819,12 @@
                 </a>
               </li>
               <li>
-                <a href="{location.origin+'/coffee/mpesa'}" target="_blank" class="flex justify-between">
-                  <span>MPesa</span>
-                  <span>&rarr;</span>
-                </a>
+                <!-- window.open(location.origin+'/coffee/mpesa', '_blank') -->
+                  <a href="{ location.origin + '/coffee/mpesa' + (PROD ? '.html' : '') }" target="_blank" class="flex justify-between">
+                    <span>MPesa</span>
+                    <span>&rarr;</span>
+                  </a>
+                
               </li>
             </ul>
           </details>

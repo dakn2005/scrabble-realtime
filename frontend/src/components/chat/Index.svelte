@@ -3,6 +3,6 @@
     import SendMessage from "./SendMessage.svelte";
 </script>
 
-<Messages />
-<br/>
 <SendMessage />
+<br/>
+<Messages />

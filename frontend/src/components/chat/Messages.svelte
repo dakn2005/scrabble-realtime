@@ -6,10 +6,10 @@
 
   let { username } = $userStore;
 
-  onMount(() => {
-    if (document.getElementById("chats-container"))
-      document.getElementById("chats-container").scrollTop = document.getElementById("chats-container")?.scrollHeight;
-  });
+  // onMount(() => {
+  //   if (document.getElementById("chats-container"))
+  //     document.getElementById("chats-container").scrollTop = 0; //document.getElementById("chats-container")?.scrollHeight;
+  // });
 
   // // $: if ($socket){
   //   $socket.on("receive_message", (data) => {  

@@ -1,4 +1,4 @@
-import { eq, lt, gte, ne, } from 'drizzle-orm';
+import { eq, lt, gte, ne, desc } from 'drizzle-orm';
 import { DrizzleError } from 'drizzle-orm';
 import dayjs from 'dayjs';
 
@@ -41,7 +41,7 @@ export const saveSupporterMessage = async (data: IMessage) =>{
 }
 
 export const getGames = async(roomId? : number) => {
-    let res = await db.select().from(games)
+    let res = await db.select().from(games).orderBy(desc(games.createddate))
     return res
 }
 
