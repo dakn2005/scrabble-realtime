@@ -1,0 +1,1 @@
+ALTER TABLE "supporter_messages" ADD COLUMN "phone" varchar(15) NOT NULL;

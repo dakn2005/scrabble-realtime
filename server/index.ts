@@ -23,14 +23,19 @@ const mpesa:any = require('./utils/payment.js')
 
 let app = express();
 
-app.use(cors());
-app.use(express.json());
+
 // app.use(express.urlencoded({extended: true}))
 
 const server = http.createServer(app);
 
 let ioCorsUrl = process.env.DEBUG ? 'http://localhost:5173' : process.env.SERVER_URL;
 
+// {
+//     origin: process.env.DEBUG ? '*' : ioCorsUrl
+// }
+app.use(cors());
+
+app.use(express.json());
 // console.log(process.env.DEBUG, ioCorsUrl)
 
 // app.get('/rooms', (req: Request, res: Response) => {
@@ -97,7 +102,7 @@ app.post('/api/coffee/mpesa/feedback', async (req: Request, res: Response) => {
 
 app.post('/api/coffee/mpesa', async (req: Request, res: Response) => {
     let response = await mpesa.PostMpesa(req);  
-    console.log(response)
+    // console.log(response)
     return res.send(response);
     // return res.send({msg: 'nipo hapa'})
 });
@@ -269,6 +274,8 @@ io.on('connection', (socket: Socket) => {
 
     socket.on('reset_game', async (data) => {
         let { username, game } = data;
+
+        console.log('reset_game', data)
         
         let lb = game.lang == ELangs.en ? initEnLetterBag : initShengSwaLetterBag;
         await patchGameState(game.name, {
@@ -294,6 +301,7 @@ io.on('connection', (socket: Socket) => {
 
         const { username, gameName } = data;
         // let cp = players.find((user) => user.game == gameName && user.username);
+        console.log('leave_game', data)
 
         // * recover tiles
         // if (cp?.id != socket.id ) {

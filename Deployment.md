@@ -1,2 +1,8 @@
-server/crud - update to neon db
-frontend/constants - ensure to set PROD true in 
+-> clear all dev presets
+    -- Login - username
+    -- Mpesa form - phonenumber
+-> Transfer .env vars to prod
+-> migrate latest db changes to live
+-> frontend/constants - ensure to set PROD true 
+---> copy build to server/frontend
+-> server/crud - update to neon db

@@ -12,7 +12,7 @@ let
     c_key = process.env['MPESA_CONSUMER_KEY'],
     c_secret = process.env['MPESA_CONSUMER_SECRET'],
     c_shortcode = process.env['MPESA_STK_SHORTCODE'],
-    c_callback_url = process.env['NODE_ENV'] === 'production' ? process.env['MPESA_CALLBACK_URL'] : 'https://1435-105-163-157-127.ngrok-free.app',
+    c_callback_url = process.env['NODE_ENV'] === 'production' ? process.env['MPESA_CALLBACK_URL'] : 'https://cc2okk-ip-105-163-157-127.tunnelmole.net',
     c_passkey = process.env['MPESA_PASSKEY']
 
 
@@ -48,7 +48,7 @@ async function getAccessToken() {
 
 const sleep = ms => new Promise((resolve) => { setTimeout(resolve, ms) });
 
-async function PostMpesa (request) {
+async function PostMpesa(request) {
     let url = `https://${saf_prefix}.safaricom.co.ke/mpesa/stkpush/v1/processrequest`;
     let cust_timestamp = dayjs().format('YYYYMMDDHHmmss');
     let pwd = Buffer.from(c_shortcode + c_passkey + cust_timestamp).toString('base64');
@@ -56,6 +56,7 @@ async function PostMpesa (request) {
     let access_token = await getAccessToken();
 
     let amount = request.body.amount;
+    let max_check = 25
 
 
     // let leInvoice = null;
@@ -79,7 +80,7 @@ async function PostMpesa (request) {
         "PartyB": c_shortcode,
         "PhoneNumber": request.body.phone,
         "CallBackURL": c_callback_url + '/api/coffee/mpesa/feedback',
-        "AccountReference": 'DAVID', //request.body.accountref,
+        "AccountReference": 'DAVID',
         "TransactionDesc": "Buy me a Coffee"
     }
 
@@ -106,12 +107,12 @@ async function PostMpesa (request) {
 
     // let starttime = dayjs();
     let stkresp_rec;
-    while (boolcheck && check_cnt <= 40) {
-        await sleep(1500);
+    while (boolcheck && check_cnt <= max_check) {
+        await sleep(1000);
 
         stkresp_rec = await crud.getStk(data?.CheckoutRequestID); //await stkReponse.query().findOne('CheckoutRequestID', data.CheckoutRequestID);
 
-        if (stkresp_rec) {
+        if (stkresp_rec && stkresp_rec.length > 0) {
 
             // leInvoice = await BiasharaInvoice.query().patchAndFetchById(leInvoice.biashara_invoice_id, {
             //     invoice_status: stkresp_rec.ResultCode == 0 ? EnumInvoiceStatus.paid : leInvoice.invoice_status
@@ -128,19 +129,29 @@ async function PostMpesa (request) {
     // console.log('diff ', dayjs().diff(starttime, 'second'));
     // console.log(check_cnt)
 
-    if (check_cnt == 41) {
+    if (check_cnt == max_check + 1) {
         apiFailedmsg['message'] = 'Server Timeout';
         response = apiFailedmsg
     } else {
-        if (!boolcheck && stkresp_rec && stkresp_rec.ResultCode == '0') {            
-            if (stkresp_rec && stkresp_rec.ResultCode == '0') {
-                apiSuccessmsg['message'] = 'Thanks for the support, much appreciated. You can close the page when done';
-                response = apiSuccessmsg;
+        if (!boolcheck && stkresp_rec[0].ResultCode == '') {
+            apiSuccessmsg['message'] = 'Thanks for the support, much appreciated. You can close this page when done';
+            response = apiSuccessmsg;
+            // save username n message if exists
+            if (request.body.socialat_name_handle || request.body.message) {
+
+                await crud.saveSupporterMessage({
+                    message: request.body.message,
+                    username: request.body.socialat_name_handle,
+                    socialat: request.body.socialat,
+                    phone: request.body.phone,
+                    accountref: stkresp_rec[0].accountref,
+                })
             }
-            else {
-                apiFailedmsg['message'] = 'Unfortunately, the transaction failed. Please feel free to try again';
-                response = apiFailedmsg
-            }
+
+        }
+        else {
+            apiFailedmsg['message'] = 'Unfortunately, the transaction failed. Please feel free to try again';
+            response = apiFailedmsg
         }
     }
 

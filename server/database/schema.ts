@@ -12,12 +12,14 @@ import {
     boolean,
 } from 'drizzle-orm/pg-core';
 
-export const messages = pgTable('messages', {
+export const supporter_messages = pgTable('supporter_messages', {
     id: serial('id').notNull().primaryKey(),
-    username: varchar('username', { length: 255 }).notNull(),
-    message: varchar('message', { length: 255 }).notNull(),
-    game: integer('game').references(() => games.id),
-    createddate: date('createddate', { mode: 'date' }).notNull(),
+    username: varchar('username', { length: 150 }),
+    message: varchar('message', { length: 255 }),
+    socialat: varchar('socialat', { length: 25 }),
+    phone: varchar('phone', { length: 15 }).notNull(),
+    accountref: varchar('accountref', { length: 50 }).notNull(),
+    createddate: date('createddate', { mode: 'date' }).default(sql`now()`).notNull(),
 });
 
 export const games = pgTable(
@@ -55,6 +57,7 @@ export const stkresponse = pgTable(
     'stkresponse',
     {
         stkresponse_id: varchar('stkresponse_id', { length: 100 }).primaryKey().notNull(),
+        accountref: varchar('accountref', { length: 50 }),
         MerchantRequestID: varchar('MerchantRequestID', { length: 100 }).notNull(),
         CheckoutRequestID: varchar('CheckoutRequestID', { length: 100 }).notNull(),
         ResultCode: varchar('ResultCode', { length: 10 }).notNull(),
@@ -64,4 +67,3 @@ export const stkresponse = pgTable(
         updatedate: date('updatedate', { mode: 'date' })
     }
 )
-

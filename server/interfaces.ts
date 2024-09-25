@@ -17,9 +17,11 @@ interface IStkReponse {
 }
 
 interface IMessage {
-    message: string
-    username: string
-    game: number
+    message?: string
+    username?: string
+    socialat?: string
+    phone: string
+    accountref: string
     createddate: Date
 }
 

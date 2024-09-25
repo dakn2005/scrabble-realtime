@@ -478,6 +478,7 @@
   }
 
   function adminRemovePlayer(pName) {
+    console.log(pName)
     if (confirm('Remove selected player?'))
       $socket.emit("leave_game", { username: pName, gameName: game?.name, removeOtherPlayer: true });
   }
@@ -634,7 +635,7 @@
   $socket?.on("ingame_players", (data) => {
     if (data) gamePlayers = data;
 
-    // console.log("ingame_players", data);
+    console.log("ingame_players", data);
   });
 
   $socket?.on("current_player", (player) => {
@@ -805,7 +806,7 @@
                 </a>
               </li>
               <li>
-                <a href="/coffee/mpesa" target="_blank" class="flex justify-between">
+                <a href="{location.origin+'/coffee/mpesa'}" target="_blank" class="flex justify-between">
                   <span>MPesa</span>
                   <span>&rarr;</span>
                 </a>
