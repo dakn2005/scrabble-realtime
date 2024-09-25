@@ -1,7 +1,9 @@
 <script>
   import daysjs from "dayjs";
 
-  import { history } from "$lib/stores.js";
+  import { history, userStore } from "$lib/stores.js";
+
+  let {game} = $userStore;
 
 
   $: if ($history){
@@ -19,7 +21,7 @@
       {#if hist.wordscore}
         {#each hist.wordscore as ws}
         <div class="flex flex-row justify-between bg-slate-100 p-2 text-sm">
-          <span>{ws[0]}</span>
+          <a href={`https://google.com/search?q=${ws[0]}+${game.lang}+meaning`} target="_blank">{ws[0]} <i class="fa-solid fa-square-arrow-up-right text-xs"></i></a>
           <span></span>
           <span>{ws[1]}</span>
         </div>

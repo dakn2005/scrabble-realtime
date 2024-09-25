@@ -10,23 +10,32 @@ import cors from 'cors';
 import path from 'path';
 import 'dotenv/config';
 import flatten from 'lodash/flatten';
+import { ulid } from 'ulid';
 
 import { IUser, ELangs, IGameStateTable, IGame, TStats, TPlayerData, TTempTiles, TLetterBag } from './interfaces'
-import { getGames, createGame, upsertGameState, patchGameState, getGameState } from './database/services/crud';
+import { getGames, createGame, upsertGameState, patchGameState, getGameState, saveStkReponse } from './database/services/crud';
+import { shengTrie, engTrie, swahiliTrie, initShengSwaLetterBag, initEnLetterBag, enLettersScores, swaShengLettersScores } from './utils/tries';
 import { leaveGame, leaveGameBySocketId } from './utils/leave-game';
 import errorHandling from './utils/errorHandling';
-import { shengTrie, engTrie, swahiliTrie, initShengSwaLetterBag, initEnLetterBag, enLettersScores, swaShengLettersScores } from './utils/tries';
+
+// https://stackoverflow.com/questions/41219542/how-to-import-js-modules-into-typescript-file
+const mpesa:any = require('./utils/payment.js')
 
 let app = express();
 
-app.use(cors());
-app.use(express.json())
+
 // app.use(express.urlencoded({extended: true}))
 
 const server = http.createServer(app);
 
 let ioCorsUrl = process.env.DEBUG ? 'http://localhost:5173' : process.env.SERVER_URL;
 
+// {
+//     origin: process.env.DEBUG ? '*' : ioCorsUrl
+// }
+app.use(cors());
+
+app.use(express.json());
 // console.log(process.env.DEBUG, ioCorsUrl)
 
 // app.get('/rooms', (req: Request, res: Response) => {
@@ -40,13 +49,17 @@ app.get('/', (req: Request, res: Response) => {
 
 app.use('/', express.static(path.join(__dirname, 'public/')))
 
+app.get('/api/amka', (req: Request, res: Response) => {
+    res.send('Howdy!');
+});
+
 app.get('/api/games', async (req: Request, res: Response) => {
     const games = await getGames();
     res.send(games)
 });
 
+// TODO: deprecated
 app.get('/api/games/trie', async (req: Request, res: Response) => {
-    // TODO: deprecated
     if (req.params['lang'] == 'sheng') {
         res.send(shengTrie)
     }
@@ -72,6 +85,26 @@ app.post('/api/games/add', async (req: Request, res: Response) => {
     }
 
     // console.log(err)
+});
+
+app.post('/api/coffee/mpesa/feedback', async (req: Request, res: Response) => {
+    let dayta = req.body?.Body?.stkCallback;
+
+    await saveStkReponse({
+        stkresponse_id: ulid(),
+        ...dayta
+    });
+   
+    res.send({
+        message: 'success'
+    })
+});
+
+app.post('/api/coffee/mpesa', async (req: Request, res: Response) => {
+    let response = await mpesa.PostMpesa(req);  
+    // console.log(response)
+    return res.send(response);
+    // return res.send({msg: 'nipo hapa'})
 });
 
 const io = new Server(server, {
@@ -188,7 +221,7 @@ io.on('connection', (socket: Socket) => {
                 }
             });
 
-            if (mchezaji){
+            if (mchezaji) {
                 mchezaji.score = prevScore;
 
                 if (!gamePlayers.includes(mchezaji))
@@ -239,6 +272,39 @@ io.on('connection', (socket: Socket) => {
         // saveMessage(rec)
     });
 
+    socket.on('reset_game', async (data) => {
+        let { username, game } = data;
+
+        // console.log('reset_game', data)
+        
+        let lb = game.lang == ELangs.en ? initEnLetterBag() : initShengSwaLetterBag();
+
+        await patchGameState(game.name, {
+            letterbag: lb,
+            statistics: null,
+            updatedate: new Date(),
+            currentplayer: username,
+        });
+        
+        let gamePlayers = players.filter((user) => user?.game === game.name);
+
+        for (let p of gamePlayers) {
+            delete tempPlayerTileData[`${p.username}_${game.name}`];
+
+            if (p.username == username)
+                socket.emit('umeleftishwa', {username, reset: true});
+            else
+                socket.to(game.name).emit('umeleftishwa', {username: p.username, reset: true});
+        }
+
+        // purge game players
+        players = players.filter((user) => user?.game != game.name);
+
+        // purge all sockets
+        io.in(game.name).socketsLeave(game.name);
+        // socket.in(gameName).disconnectSockets() 
+    });
+
     socket.on('leave_game', async (data) => {
 
         const { username, gameName } = data;
@@ -254,7 +320,6 @@ io.on('connection', (socket: Socket) => {
             let gs: IGameStateTable[] = await getGameState(gameName);
             let lb = gs[0].letterbag;
 
-
             if (lb) {
                 // console.log('no recovertile', [...lb, ...temptiles]);
 
@@ -269,7 +334,6 @@ io.on('connection', (socket: Socket) => {
             let gs: IGameStateTable[] = await getGameState(gameName);
             let lb = gs[0].letterbag;
 
-
             if (lb) {
                 // console.log('recovertile', [...lb, ...data.recoverTiles])
 
@@ -279,21 +343,31 @@ io.on('connection', (socket: Socket) => {
             }
         }
         // }
+        
+        if (data.removeOtherPlayer) {
+            socket.to(gameName).emit('umeleftishwa', {username});
+        }
 
         // TODO: if players remaining, assign to next player
+        if (data.removeOtherPlayer) {
+            let socketId = players.find(p => p.username == username && p.game == gameName)?.id ?? '';
+            io.sockets?.sockets?.get(socketId)?.leave(gameName);
+        }else{
+            socket.leave(gameName);
+        }
 
-        socket.leave(gameName);
         const __createdtime__ = Date.now();
         // Remove user from memory
         players = leaveGame(username, gameName, players);
 
-        socket.to(gameName).emit('ingame_players', players);
-        socket.to(gameName).emit('receive_message', {
+        io.to(gameName).emit('ingame_players', players);
+        io.to(gameName).emit('receive_message', {
             username: CHAT_BOT,
             message: `${username} has left the chat`,
             __createdtime__,
         });
 
+              
         // console.log(`${username} has left the chat`);
         // console.log(players)
     });
@@ -319,17 +393,17 @@ io.on('connection', (socket: Socket) => {
         if (data.words[0][0].length == 1)
             all_verified.push(false);
 
-        if (data.game.lang == ELangs.sheng) {
+        if (data.game.lang == ELangs.sheng || data.game.lang == ELangs.swa) {
             // https://lughayangu.com/sheng
             // https://kenyanmagazine.co.ke/200-sheng-words-and-their-meanings/
             for (const word of data.words) {
                 // console.log(word)
 
-                let isword = shengTrie.search(word[0]);
+                let isword = false
 
-                if (!isword) {
-                    isword = swahiliTrie.search(word[0]);
-                }
+                if (data.game.lang == ELangs.sheng) isword = shengTrie.search(word[0]);
+
+                if (!isword) isword = swahiliTrie.search(word[0]);
 
                 if (!isword) {
                     // (async () => {
@@ -435,33 +509,35 @@ io.on('connection', (socket: Socket) => {
             history = Object.keys(gstate).map(k => {
                 let mchezaji: IUser = gamePlayers.find(u => u.username == k) as IUser;
                 let prevScore = 0;
-    
+
                 let to_return = gstate[k].map((s: TPlayerData) => {
                     let wsarr = s.words.map(w => [w[0], w[2]]);
                     let playerScore = s.words.reduce((a, b) => a + b[2], 0);
-    
+
                     if (mchezaji) {
                         prevScore += playerScore
                     }
-    
+
                     return {
                         player: k,
                         masaa: s.timestamp,
                         wordscore: wsarr
                     }
                 });
-    
-                if (mchezaji){
+
+                if (mchezaji) {
                     mchezaji.score = prevScore;
-    
+
                     if (!gamePlayers.includes(mchezaji))
                         gamePlayers = [...gamePlayers, mchezaji];
                 }
-    
+
                 return to_return;
             });
-    
+
             history = flatten(history);
+
+            history.sort((a, b) => new Date(b.masaa).getTime() - new Date(a.masaa).getTime());
 
             await patchGameState(data.game.name, {
                 statistics: JSON.stringify(gstate),

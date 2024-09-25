@@ -49,7 +49,7 @@
 <!-- <label for="my-drawer" class="btn btn-primary">Side Menu</label> -->
 <Toaster richColors position="bottom-center" closeButton />
 
-<Sheet.Root bind:open="{$chatsOpen}">
+<Sheet.Root bind:open="{$chatsOpen[0]}">
   <!-- <Sheet.Trigger>Open</Sheet.Trigger> -->
   <Sheet.Content>
     <!-- <Sheet.Header> -->
@@ -57,7 +57,7 @@
       <!-- <Sheet.Description>This action cannot be undone. This will permanently delete your account and remove your data from our servers.</Sheet.Description> -->
     <!-- </Sheet.Header> -->
 
-    <Tabs.Root value="chatting" class="w-full">
+    <Tabs.Root value={$chatsOpen[1]} class="w-full">
       <Tabs.List class="w-full">
         <Tabs.Trigger value="chatting">Chats</Tabs.Trigger>
         <Tabs.Trigger value="historia">Turn History</Tabs.Trigger>

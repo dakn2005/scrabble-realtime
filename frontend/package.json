@@ -50,6 +50,7 @@
 	"type": "module",
 	"dependencies": {
 		"@highcharts/svelte": "^1.1.0",
+		"@lottiefiles/dotlottie-svelte": "^0.3.19",
 		"bits-ui": "^0.21.13",
 		"clsx": "^2.1.1",
 		"dayjs": "^1.11.13",

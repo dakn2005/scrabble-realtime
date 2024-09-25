@@ -1,24 +1,43 @@
-import { eq, lt, gte, ne } from 'drizzle-orm';
+import { eq, lt, gte, ne, } from 'drizzle-orm';
 import { DrizzleError } from 'drizzle-orm';
+import dayjs from 'dayjs';
 
 // import {db} from '../conn';
 import { db } from '../db-neon';
-import { game_state, games, messages } from '../schema';
-import {IMessage, IGame, IGameStateTable} from '../../interfaces';
+import { game_state, games, supporter_messages, stkresponse } from '../schema';
+import {IMessage, IGame, IGameStateTable, IStkReponse } from '../../interfaces';
 
-export const saveMessage = async (data: IMessage) =>{
+export const saveStkReponse = async(data: IStkReponse) => {
 
-    await db.insert(messages).values({
-        username: data.username,
-        message: data.message,
-        game: data.game,
-        createddate: data.createddate
+    await db.insert(stkresponse).values({
+        stkresponse_id: data.stkresponse_id,
+        accountref: dayjs().format('YYYYMMDDHHMMs'),
+        MerchantRequestID: data.MerchantRequestID,
+        CheckoutRequestID: data.CheckoutRequestID,
+        ResultCode: data.ResultCode || '', // Handle the case when ResultCode is undefined
+        ResultDesc: data.ResultDesc,
+        CallbackMetadata: data.CallbackMetadata || null, // Handle the case when CallbackMetadata is undefined
+        createddate: data.createddate,
+        updatedate: data.updatedate,
     });
 }
 
-export const readMessages = async(roomId: number) =>{
-    let res = await db.select().from(messages).where(eq(messages.game, roomId));
-    return res
+export const getStk = async (checkoutID: string) =>{
+    if (!checkoutID) return null;
+
+    let res = await db.select().from(stkresponse).where(eq(stkresponse.CheckoutRequestID, checkoutID));
+    return res;
+}
+
+export const saveSupporterMessage = async (data: IMessage) =>{
+    await db.insert(supporter_messages).values({
+        username: data.username,
+        message: data.message,
+        socialat: data.socialat,
+        phone: data.phone,
+        accountref: data.accountref,
+        createddate: new Date()
+    });
 }
 
 export const getGames = async(roomId? : number) => {
