@@ -5,7 +5,7 @@
 
   let amount = 0,
     input_amount,
-    phone = "0721151960",
+    phone = "",
     loading = false;
 
   let socialat = "",

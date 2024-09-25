@@ -2,8 +2,8 @@ import { eq, lt, gte, ne, } from 'drizzle-orm';
 import { DrizzleError } from 'drizzle-orm';
 import dayjs from 'dayjs';
 
-import {db} from '../conn';
-// import { db } from '../db-neon';
+// import {db} from '../conn';
+import { db } from '../db-neon';
 import { game_state, games, supporter_messages, stkresponse } from '../schema';
 import {IMessage, IGame, IGameStateTable, IStkReponse } from '../../interfaces';
 

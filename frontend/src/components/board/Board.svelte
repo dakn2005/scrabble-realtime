@@ -25,7 +25,9 @@
 
     // ensure render free-tier is always up when on board
     setInterval(async () => {
-      const resp = await fetch(SOCKET_URL + "/api/amka");
+      const resp = await fetch(SOCKET_URL + "/api/amka").catch(err => {
+        $socket = null;
+      });
       let stt = await resp.status;
 
       // console.log('amka! ', stt)
@@ -478,7 +480,8 @@
   }
 
   function adminRemovePlayer(pName) {
-    console.log(pName)
+    // console.log(pName)
+
     if (confirm('Remove selected player?'))
       $socket.emit("leave_game", { username: pName, gameName: game?.name, removeOtherPlayer: true });
   }
@@ -526,7 +529,7 @@
 
   // $: console.log($socket)
 
-  $: if ($socket == null) {
+  $: if (!$socket || $socket == null) {
     toast.warning("Issues communicating with the server");
     $recoverTiles = pickedTiles?.map((t) => t.letter);
     goto("/");
@@ -635,7 +638,7 @@
   $socket?.on("ingame_players", (data) => {
     if (data) gamePlayers = data;
 
-    console.log("ingame_players", data);
+    // console.log("ingame_players", data);
   });
 
   $socket?.on("current_player", (player) => {
@@ -679,12 +682,21 @@
   });
 
   $socket?.on("umeleftishwa", (data) => {
-    if (username == data.username){
-      $userStore = {};
-      $messages = [];
+    if (data.reset)
+      toast('Game has been reset by Game\'s creator', 3000);
+    else
+      toast("You've been removed from the game", 3000);
 
-      goto("/");
-    }
+
+    setTimeout(()=>{
+
+      if (username == data.username){
+        $userStore = {};
+        $messages = [];
+  
+        goto("/");
+      }
+    }, 3000)
   });
 </script>
 

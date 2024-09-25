@@ -275,19 +275,26 @@ io.on('connection', (socket: Socket) => {
     socket.on('reset_game', async (data) => {
         let { username, game } = data;
 
-        console.log('reset_game', data)
+        // console.log('reset_game', data)
         
-        let lb = game.lang == ELangs.en ? initEnLetterBag : initShengSwaLetterBag;
+        let lb = game.lang == ELangs.en ? initEnLetterBag() : initShengSwaLetterBag();
+
         await patchGameState(game.name, {
             letterbag: lb,
             statistics: null,
-            updatedate: new Date()
+            updatedate: new Date(),
+            currentplayer: username,
         });
         
         let gamePlayers = players.filter((user) => user?.game === game.name);
+
         for (let p of gamePlayers) {
-            delete tempPlayerTileData[`${username}_${game.name}`];
-            io.to(game.name).emit('umeleftishwa', p.username);
+            delete tempPlayerTileData[`${p.username}_${game.name}`];
+
+            if (p.username == username)
+                socket.emit('umeleftishwa', {username, reset: true});
+            else
+                socket.to(game.name).emit('umeleftishwa', {username: p.username, reset: true});
         }
 
         // purge game players
@@ -295,13 +302,13 @@ io.on('connection', (socket: Socket) => {
 
         // purge all sockets
         io.in(game.name).socketsLeave(game.name);
+        // socket.in(gameName).disconnectSockets() 
     });
 
     socket.on('leave_game', async (data) => {
 
         const { username, gameName } = data;
         // let cp = players.find((user) => user.game == gameName && user.username);
-        console.log('leave_game', data)
 
         // * recover tiles
         // if (cp?.id != socket.id ) {
@@ -336,6 +343,10 @@ io.on('connection', (socket: Socket) => {
             }
         }
         // }
+        
+        if (data.removeOtherPlayer) {
+            socket.to(gameName).emit('umeleftishwa', {username});
+        }
 
         // TODO: if players remaining, assign to next player
         if (data.removeOtherPlayer) {
@@ -349,14 +360,14 @@ io.on('connection', (socket: Socket) => {
         // Remove user from memory
         players = leaveGame(username, gameName, players);
 
-        socket.to(gameName).emit('ingame_players', players);
-        socket.to(gameName).emit('receive_message', {
+        io.to(gameName).emit('ingame_players', players);
+        io.to(gameName).emit('receive_message', {
             username: CHAT_BOT,
             message: `${username} has left the chat`,
             __createdtime__,
         });
 
-        socket.to(gameName).emit('umeleftishwa', username);
+              
         // console.log(`${username} has left the chat`);
         // console.log(players)
     });
