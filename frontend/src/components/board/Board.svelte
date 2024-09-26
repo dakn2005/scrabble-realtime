@@ -781,6 +781,7 @@
     <!-- users[scores] | tiles left | turn history |  -->
 
     <div class="flex flex-col md:flex-row w-full p-6 md:p-2">
+
       <div class="w-full md:w-1/3 mb-4 md:mb-0">
         <div class="flex flex-row">
           {#each gamePlayers as player}
@@ -800,38 +801,43 @@
         </div>
       </div>
 
-      <div class="w-full md:w-1/3 text-center md:flex-col flex-row mb-4 md:mb-0">
-        <span class="text-5xl md:text-6xl font-semibold">{remainingTiles}</span>
-        <span>tiles left</span>
-      </div>
+      <div class="w-full md:w-2/3 flex flex-row mb-4 md:mb-0 mt-5 md:mt-0">
 
-      <div class="w-full md:w-1/3 mb-4 md:mb-0">
-        <div class="flex flex-col text-center justify-center w-[200px] -mt-10">
-          <DotLottieSvelte src="coffee2.lottie" background="transparent" speed="1" style="width: 100px; height: 100px" direction="1" playMode="normal" autoplay loop></DotLottieSvelte>
-          <!-- <ScoreChart /> -->
-          <details class="dropdown dropdown-top">
-            <summary class="btn text-white pacifico-regular bg-amber-400 hover:bg-amber-600">Buy me a coffee</summary>
-            <ul class="menu dropdown-content bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
-              <li>
-                <a href="https://buymeacoffee.com/dakn2005" target="_blank" class="flex justify-between">
-                  <span>Card</span>
-                  <span>&rarr;</span>
-                </a>
-              </li>
-              <li>
-                <!-- window.open(location.origin+'/coffee/mpesa', '_blank') -->
-                  <a href="{ location.origin + '/coffee/mpesa' + (PROD ? '.html' : '') }" target="_blank" class="flex justify-between">
-                    <span>MPesa</span>
+        <div class="w-1/2 text-center flex flex-col mt-4 md:mt-2">
+          <span class="text-5xl md:text-6xl font-semibold">{remainingTiles}</span>
+          <span>tiles left</span>
+        </div>
+
+        <div class="w-1/2">
+          <div class="flex flex-col text-center justify-center w-[200px] -mt-10">
+            <DotLottieSvelte src="coffee2.lottie" background="transparent" speed="1" style="width: 100px; height: 100px" direction="1" playMode="normal" autoplay loop></DotLottieSvelte>
+            <!-- <ScoreChart /> -->
+            <details class="dropdown dropdown-top">
+              <summary class="btn text-white pacifico-regular bg-amber-400 hover:bg-amber-600">Buy me a coffee</summary>
+              <ul class="menu dropdown-content bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
+                <li>
+                  <a href="https://buymeacoffee.com/dakn2005" target="_blank" class="flex justify-between">
+                    <span>Card</span>
                     <span>&rarr;</span>
                   </a>
-                
-              </li>
-            </ul>
-          </details>
-          
-            <!-- <i class="fa-solid fa-mug-hot"></i> -->
+                </li>
+                <li>
+                  <!-- window.open(location.origin+'/coffee/mpesa', '_blank') -->
+                    <a href="{ location.origin + '/coffee/mpesa' + (PROD ? '.html' : '') }" target="_blank" class="flex justify-between">
+                      <span>MPesa</span>
+                      <span>&rarr;</span>
+                    </a>
+                  
+                </li>
+              </ul>
+            </details>
+            
+              <!-- <i class="fa-solid fa-mug-hot"></i> -->
+          </div>
         </div>
+
       </div>
+
     </div>
 
     <Drawer.Footer>

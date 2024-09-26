@@ -4,7 +4,7 @@
   import { toast } from "svelte-sonner";
 
   let amount = 0,
-    input_amount,
+    input_amount="",
     phone = "",
     loading = false;
 
@@ -23,16 +23,18 @@
     amount = val;
   }
 
+  $: input_amount = input_amount.replace(/[^0-9]/g, "");
+
   $: amount = input_amount;
 
-  $: message = message.replace(/[^a-zA-Z0-9\.@,_-\s\!\?]/g, "");
-
   $: socialat_name_handle = socialat_name_handle.replace(/[^a-zA-Z0-9\.@_-\s]/g, "");
+
+  $: message = message.replace(/[^a-zA-Z0-9\.@,_-\s\!\?]/g, "");
 
   async function callStk() {
     loading = true;
 
-    let formatted_phone = phone.replace(/^0+/, "254").replace(/\s/, "");
+    let formatted_phone = phone.replace(/^0+/, "254").replace(/[^0-9]/g, "").replace(/\s/, "");
 
     const resp = await fetch(SOCKET_URL + "/api/coffee/mpesa", {
       method: "POST",
@@ -65,8 +67,9 @@
   }
 </script>
 
-<div style="height: 100vh;" class="pt-20 bg-base-100">
-  <div class="card w-1/2 xl:w-1/3 shadow-xl m-auto">
+<div style="height: 100vh;" class="pt-20 bg-lime-50">
+
+  <div class="card w-10/12 md:w-1/2 xl:w-1/3 shadow-xl m-auto">
     <div class="card-title justify-center">
       <div class="w-24 text-center">
         <DotLottieSvelte src="/coffee.lottie" background="transparent" speed="1" direction="1" playMode="normal" autoplay loop></DotLottieSvelte>
@@ -76,21 +79,24 @@
       <div class="flex flex-col w-full text-center mb-5">
         <span class="text-3xl">Buy David a Coffee</span>
         <div>
-          <span class="badge badge-warning" style="font-size: 10px;">
+          <span class="badge badge-warning text-[8.3px] md:text-[10px]">
             You'll receive a push notification from &nbsp;<strong>CRAFTIT LTD</strong>
           </span>
         </div>
       </div>
 
-      <div class="flex flex-row space-x-2">
-        <button class="btn bg-lime-400 hover:bg-lime-500 rounded-lg" on:click="{() => onPress(100)}">100</button>
-        <button class="btn bg-lime-400 hover:bg-lime-500 rounded-lg" on:click="{() => onPress(300)}">300</button>
-        <button class="btn bg-lime-400 hover:bg-lime-500 rounded-lg" on:click="{() => onPress(500)}">500</button>
-
-        <input type="text" class="w-24 input input-bordered rounded-md" bind:value="{input_amount}" />
+      <div class="flex flex-col md:flex-row">
+          <div class="space-x-2 w-full md:w-3/4">
+            <button class="btn bg-lime-400 hover:bg-lime-500 rounded-lg" on:click="{() => onPress(100)}">100</button>
+            <button class="btn bg-lime-400 hover:bg-lime-500 rounded-lg" on:click="{() => onPress(300)}">300</button>
+            <button class="btn bg-lime-400 hover:bg-lime-500 rounded-lg" on:click="{() => onPress(500)}">500</button>
+          </div>
+          <div class="w-full mt-2 md:mt-0 md:w-1/4">
+            <input type="text" class="w-2/4 bg-slate-100 md:w-24 input input-bordered rounded-md" bind:value="{input_amount}" />
+          </div>
       </div>
 
-      <input type="text" class="input input-bordered rounded-md text-sm" placeholder="phone number (07...)" bind:value="{phone}" />
+      <input type="text" class="input input-bordered rounded-md text-sm" placeholder="Kenyan phone number (07...)" bind:value="{phone}" />
 
       <label class="input input-bordered rounded-md flex items-center gap-2">
         {#if socialat_name_handle.includes("@")}
