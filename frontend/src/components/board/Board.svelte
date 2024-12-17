@@ -13,12 +13,13 @@
   import Tile from "./Tile.svelte";
   import Square from "./Square.svelte";
   import SideBottomMenu from "./SideBottomMenu.svelte";
-  import ScoreChart from "./ScoreChart.svelte";
+  // import ScoreChart from "./ScoreChart.svelte";
   import FloatingBtn from "$components/general/FloatingBtn.svelte";
   import IndeterminateProgressBar from "$components/general/IndeterminateProgressBar.svelte";
   // import Queue from "$lib/queue.js";
   import { SOCKET_URL, PROD } from "$lib/constants.js";
   import { socket, userStore, messages, settingsOpen, recoverTiles, history } from "$lib/stores.js";
+  import { t, locale, locales } from "$lib/localization/i18n";
 
   onMount(() => {
     autoplay = true;
@@ -708,9 +709,16 @@
     <SideBottomMenu {setToggleSideBar} {submit} {pickTilesFunc} {passMeFunc} {leaveGameFunc} disabled="{currentPlayer?.toLowerCase() != username?.toLowerCase()}" />
 
     <div class="board">
+      
       <p class="text-4xl md:text-6xl text-white" style="font-family: 'Monoton', cursive;">
         <span>Scrabble</span>
       </p>
+      
+      <!-- <select bind:value={$locale} class="absolute right-2 top-2">
+        {#each locales as l}
+          <option value={l}>{l}</option>
+        {/each}
+      </select> -->
 
       <!-- board -->
       <div class="grid">

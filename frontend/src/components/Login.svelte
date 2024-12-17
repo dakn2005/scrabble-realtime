@@ -14,6 +14,9 @@
     newgame_lang,
     games = [];
 
+
+  // $: console.log(newgame_lang)
+
   let joining = false, saving = false;
 
   let interval;
@@ -98,8 +101,8 @@
   const newGame = async (join) => {
     saving = true;
 
-    if (newuname == "" || newgamename == "") {
-      toast.error("Please enter a username and game name");
+    if (newuname == "" || newgamename == "" || newgame_lang == "") {
+      toast.error("Please enter a username, game name and language");
       saving = false;
       return;
     }
@@ -195,9 +198,9 @@
           <span class="text-xs italic text-amber-400">Game Name </span>
           <input type="text" class="grow text-lg" bind:value="{newgamename}" placeholder="unique game name" />
         </label>
-
+        
         <select class="select select-bordered select-md w-full mb-4" bind:value="{newgame_lang}">
-          <option>-- Select language --</option>
+          <option value="">-- Select Language --</option>
           {#each Object.values(LANGS) as lugha}
             <option value="{lugha}">{lugha}</option>
           {/each}

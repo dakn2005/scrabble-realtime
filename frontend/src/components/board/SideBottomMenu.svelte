@@ -13,7 +13,7 @@
   const { username, game } = $userStore;
 </script>
 
-<ul class="{isbottom ? 'md:invisible menu bottommenu' : 'hidden md:menu sidemenu mt-12 mb-auto'}">
+<ul class="{isbottom ? 'md:invisible menu bottommenu' : 'hidden md:menu sidemenu mt-24'}">
   <li>
     <button on:click="{submit}" {disabled} class="{disabled ? 'disabled' : ''}">
       <i class="fa-solid fa-upload"></i>
@@ -48,7 +48,7 @@
     <!-- <label for="chat-drawer">chat</label> -->
     <button on:click="{() => ($chatsOpen = [true, 'historia'])}">
       <i class="fa-solid fa-clock-rotate-left"></i>
-      <span>History</span>
+      <span>history</span>
     </button>
   </li>
 
@@ -56,7 +56,7 @@
     <!-- <label for="chat-drawer">chat</label> -->
     <button on:click="{() => ($chatsOpen = [true, 'chatting'])}">
       <i class="fa-regular fa-comment-dots {$messages?.length ? 'animate-pulse' : ''}"></i>
-      <span>Chat</span>
+      <span>chat</span>
     </button>
   </li>
 
@@ -86,11 +86,11 @@
   }
 
   ul.sidemenu > li > button {
-    @apply flex flex-col justify-center mt-2 mb-2 shadow-slate-200 shadow-md;
+    @apply flex flex-col justify-center mt-1 mb-1 shadow-slate-200 shadow-md;
   }
 
   ul.sidemenu > li > button.disabled {
-    @apply flex flex-col justify-center mt-2 mb-2 shadow-slate-200 shadow-md bg-slate-200 cursor-default;
+    @apply flex flex-col justify-center mt-1 mb-1 shadow-slate-200 shadow-md bg-slate-200 cursor-default;
   }
 
   ul.sidemenu > li > button > span {
