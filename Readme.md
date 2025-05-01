@@ -1,7 +1,16 @@
-# Scrabble Game (Real Time)
+# [Realtime Scrabble Game](https://scrabble-ke.onrender.com/)
 ### Introduction
 
-This is a hobby project implementing scrabble in two languages: English, Swahili, and Sheng
+This is a hobby project implementing a realtime scrabble game in 3 languages: English, Swahili, and Sheng (East African)
+
+### Motivation
+Got to revisit some comp sci concepts as detailed below, using these to create a scrappy PoC during the holidays for the fam(ily). Read the [article here](https://medium.com/@keymannerdawid/swahili-scrabble-d5586fabd543) for more details
+
+#### Concepts
+- Tries (prefix trees)
+- LRUs
+- Matrix Traversal
+- sockets
 
 ### Installation Steps
 1.  Clone/download the project
@@ -24,12 +33,7 @@ For the development environment, run a tunneling client to expose your localhost
 ngrok http 8000
 ```
 
-The project includes concepts and technologies specified below
-
-
-#### DSA Concepts
-- Tries
-- LRU
+The project includes concepts (above) and technologies specified below
 
 #### Technologies
 - svelte dnd
